@@ -7,6 +7,10 @@ using System.Threading.Tasks;
 
 namespace PipeMethodCalls
 {
+	/// <summary>
+	/// Handles incoming method requests over a pipe stream.
+	/// </summary>
+	/// <typeparam name="THandling">The interface for the method requests.</typeparam>
 	internal class RequestHandler<THandling> : IRequestHandler
 	{
 		private readonly Func<THandling> handlerImplementation;

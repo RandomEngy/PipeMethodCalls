@@ -12,34 +12,45 @@ namespace PipeMethodCalls
 	{
 		private readonly string name;
 		private readonly string machine;
+		private readonly Func<THandling> handlerFactoryFunc;
 		private MethodInvoker<TRequesting> invoker;
 		private NamedPipeClientStream rawPipeStream;
 		private PipeStreamWrapper wrappedPipeStream;
 		private CancellationTokenSource workLoopCancellationTokenSource;
+		private Action<string> logger;
 
-		public PipeClientWithCallback(string name, string machine = null)
+		public PipeClientWithCallback(string name, Func<THandling> handlerFactoryFunc)
+		{
+			this.name = name;
+			this.machine = ".";
+			this.handlerFactoryFunc = handlerFactoryFunc;
+		}
+
+		public PipeClientWithCallback(string machine, string name, Func<THandling> handlerFactoryFunc)
 		{
 			this.name = name;
 			this.machine = machine;
+			this.handlerFactoryFunc = handlerFactoryFunc;
 		}
 
-		public async Task ConnectAsync(Func<THandling> handlerFunc, CancellationToken cancellationToken = default)
+		public void SetLogger(Action<string> logger)
 		{
-			if (this.machine == null)
-			{
-				this.rawPipeStream = new NamedPipeClientStream(".", this.name, PipeDirection.InOut, PipeOptions.Asynchronous);
-			}
-			else
-			{
-				this.rawPipeStream = new NamedPipeClientStream(this.machine, this.name, PipeDirection.InOut, PipeOptions.Asynchronous);
-			}
+			this.logger = logger;
+		}
 
+		public async Task ConnectAsync(CancellationToken cancellationToken = default)
+		{
+			this.logger.Log(() => $"Connecting to named pipe '{this.name}' on machine {this.machine}...");
+
+			this.rawPipeStream = new NamedPipeClientStream(this.machine, this.name, PipeDirection.InOut, PipeOptions.Asynchronous);
 			await this.rawPipeStream.ConnectAsync(cancellationToken).ConfigureAwait(false);
+			this.logger.Log(() => "Connected.");
+
 			this.rawPipeStream.ReadMode = PipeTransmissionMode.Message;
 
-			this.wrappedPipeStream = new PipeStreamWrapper(this.rawPipeStream);
+			this.wrappedPipeStream = new PipeStreamWrapper(this.rawPipeStream, this.logger);
 			this.invoker = new MethodInvoker<TRequesting>(wrappedPipeStream);
-			var requestHandler = new RequestHandler<THandling>(this.wrappedPipeStream, handlerFunc);
+			var requestHandler = new RequestHandler<THandling>(this.wrappedPipeStream, handlerFactoryFunc);
 
 			this.StartProcessing();
 		}

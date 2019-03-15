@@ -13,10 +13,11 @@ namespace TestNetServerApp
 	{
 		static void Main(string[] args)
 		{
-			var pipeServerWithCallback = new PipeServerWithCallback<IConcatenator, IAdder>("testpipe");
+			var pipeServerWithCallback = new PipeServerWithCallback<IConcatenator, IAdder>("testpipe", () => new Adder());
+			pipeServerWithCallback.SetLogger(message => Console.WriteLine(message));
 			CancellationTokenSource cSource = new CancellationTokenSource();
 
-			Task task = pipeServerWithCallback.ConnectAsync(() => new Adder(), cSource.Token);
+			Task task = pipeServerWithCallback.ConnectAsync(cSource.Token);
 
 			Console.ReadKey();
 			cSource.Cancel();

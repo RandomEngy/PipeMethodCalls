@@ -16,7 +16,8 @@ namespace TestNetClientApp
 
 		static void Main(string[] args)
 		{
-			pipeClientWithCallback = new PipeClientWithCallback<IAdder, IConcatenator>("testpipe");
+			pipeClientWithCallback = new PipeClientWithCallback<IAdder, IConcatenator>("testpipe", () => new Concatenator());
+			pipeClientWithCallback.SetLogger(message => Console.WriteLine(message));
 
 			RunClientAsync(pipeClientWithCallback);
 
@@ -26,7 +27,7 @@ namespace TestNetClientApp
 
 		private static async Task RunClientAsync(PipeClientWithCallback<IAdder, IConcatenator> client)
 		{
-			await pipeClientWithCallback.ConnectAsync(() => new Concatenator(), cancellationTokenSource.Token).ConfigureAwait(false);
+			await pipeClientWithCallback.ConnectAsync(cancellationTokenSource.Token).ConfigureAwait(false);
 			WrappedInt result = await pipeClientWithCallback.InvokeAsync(adder => adder.AddWrappedNumbers(new WrappedInt { Num = 1 }, new WrappedInt { Num = 3 })).ConfigureAwait(false);
 
 			Console.WriteLine("Server add result: " + result.Num);

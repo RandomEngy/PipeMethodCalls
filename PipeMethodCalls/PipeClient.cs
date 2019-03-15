@@ -22,31 +22,31 @@ namespace PipeMethodCalls
 
 		public async Task RunAsync(CancellationToken cancellationToken = default(CancellationToken))
 		{
-			NamedPipeClientStream rawPipeStream;
-			if (this.machine == null)
-			{
-				rawPipeStream = new NamedPipeClientStream(".", this.name, PipeDirection.InOut, PipeOptions.Asynchronous);
-			}
-			else
-			{
-				rawPipeStream = new NamedPipeClientStream(this.machine, this.name, PipeDirection.InOut, PipeOptions.Asynchronous);
-			}
+			//NamedPipeClientStream rawPipeStream;
+			//if (this.machine == null)
+			//{
+			//	rawPipeStream = new NamedPipeClientStream(".", this.name, PipeDirection.InOut, PipeOptions.Asynchronous);
+			//}
+			//else
+			//{
+			//	rawPipeStream = new NamedPipeClientStream(this.machine, this.name, PipeDirection.InOut, PipeOptions.Asynchronous);
+			//}
 
-			rawPipeStream.ReadMode = PipeTransmissionMode.Message;
+			//rawPipeStream.ReadMode = PipeTransmissionMode.Message;
 
-			using (rawPipeStream)
-			{
-				await rawPipeStream.ConnectAsync(cancellationToken).ConfigureAwait(false);
+			//using (rawPipeStream)
+			//{
+			//	await rawPipeStream.ConnectAsync(cancellationToken).ConfigureAwait(false);
 
-				var wrappedPipeStream = new PipeStreamWrapper(rawPipeStream);
-				this.invoker = new MethodInvoker<TRequesting>(wrappedPipeStream);
+			//	var wrappedPipeStream = new PipeStreamWrapper(rawPipeStream);
+			//	this.invoker = new MethodInvoker<TRequesting>(wrappedPipeStream);
 
-				// Process messages until canceled.
-				while (!cancellationToken.IsCancellationRequested)
-				{
-					await wrappedPipeStream.ProcessMessageAsync(cancellationToken).ConfigureAwait(false);
-				}
-			}
+			//	// Process messages until canceled.
+			//	while (!cancellationToken.IsCancellationRequested)
+			//	{
+			//		await wrappedPipeStream.ProcessMessageAsync(cancellationToken).ConfigureAwait(false);
+			//	}
+			//}
 		}
 
 		public Task InvokeAsync(Expression<Action<TRequesting>> expression, CancellationToken cancellationToken = default(CancellationToken))

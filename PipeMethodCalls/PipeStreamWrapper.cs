@@ -13,14 +13,16 @@ namespace PipeMethodCalls
 	{
 		private readonly byte[] readBuffer = new byte[1024];
 		private readonly PipeStream stream;
+		private readonly Action<string> logger;
 		private readonly JsonSerializerSettings serializerSettings;
 
 		// Prevents more than one thread from writing to the pipe stream at once
 		private readonly SemaphoreSlim writeLock = new SemaphoreSlim(1, 1);
 
-		public PipeStreamWrapper(PipeStream stream)
+		public PipeStreamWrapper(PipeStream stream, Action<string> logger)
 		{
 			this.stream = stream;
+			this.logger = logger;
 			this.serializerSettings = new JsonSerializerSettings();
 		}
 
@@ -41,7 +43,7 @@ namespace PipeMethodCalls
 		private async Task SendMessageAsync(MessageType messageType, object payloadObject, CancellationToken cancellationToken)
 		{
 			string payloadJson = JsonConvert.SerializeObject(payloadObject);
-			System.Diagnostics.Debug.WriteLine($"Sending {messageType} message" + Environment.NewLine + payloadJson);
+			this.logger.Log(() => $"Sending {messageType} message" + Environment.NewLine + payloadJson);
 			byte[] payloadBytes = Encoding.UTF8.GetBytes(payloadJson);
 
 			int payloadLength = payloadBytes.Length;
@@ -63,13 +65,13 @@ namespace PipeMethodCalls
 
 		public async Task ProcessMessageAsync(CancellationToken cancellationToken)
 		{
-			System.Diagnostics.Debug.WriteLine("Waiting for message...");
 			var message = await this.ReadMessageAsync(cancellationToken).ConfigureAwait(false);
 			string json = message.jsonPayload;
 
 			switch (message.messageType)
 			{
 				case MessageType.Request:
+					this.logger.Log(() => "Handling request" + Environment.NewLine + json);
 					System.Diagnostics.Debug.WriteLine("Handling request" + Environment.NewLine + json);
 					PipeRequest request = JsonConvert.DeserializeObject<PipeRequest>(json, this.serializerSettings);
 
@@ -81,7 +83,7 @@ namespace PipeMethodCalls
 					this.RequestHandler.HandleRequest(request);
 					break;
 				case MessageType.Response:
-					System.Diagnostics.Debug.WriteLine("Handling response" + Environment.NewLine + json);
+					this.logger.Log(() => "Handling response" + Environment.NewLine + json);
 					PipeResponse response = JsonConvert.DeserializeObject<PipeResponse>(json, this.serializerSettings);
 
 					if (this.ResponseHandler == null)
@@ -112,9 +114,16 @@ namespace PipeMethodCalls
 				do
 				{
 					var readBytes = await pipe.ReadAsync(this.readBuffer, 0, this.readBuffer.Length, cancellationToken).ConfigureAwait(false);
+					if (readBytes == 0)
+					{
+						string message = "Pipe has closed.";
+						this.logger.Log(() => message);
+						throw new IOException(message);
+					}
+
 					await memoryStream.WriteAsync(this.readBuffer, 0, readBytes, cancellationToken).ConfigureAwait(false);
 				}
-				while (!pipe.IsMessageComplete || memoryStream.Length == 0);
+				while (!pipe.IsMessageComplete);
 
 				return memoryStream.ToArray();
 			}

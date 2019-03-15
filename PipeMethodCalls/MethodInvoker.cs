@@ -32,7 +32,7 @@ namespace PipeMethodCalls
 				throw new InvalidOperationException($"No pending call found for ID {response.CallId}");
 			}
 
-			pendingCall.TaskCompletionSource.SetResult(response);
+			pendingCall.TaskCompletionSource.TrySetResult(response);
 		}
 
 		public async Task InvokeAsync(Expression<Action<TRequesting>> expression, CancellationToken cancellationToken = default(CancellationToken))
@@ -136,6 +136,13 @@ namespace PipeMethodCalls
 			this.pendingCalls.Add(request.CallId, pendingCall);
 
 			await this.pipeStream.SendRequestAsync(request, cancellationToken).ConfigureAwait(false);
+
+			cancellationToken.Register(
+				() =>
+				{
+					pendingCall.TaskCompletionSource.TrySetException(new OperationCanceledException("Request has been canceled."));
+				},
+				false);
 
 			return await pendingCall.TaskCompletionSource.Task.ConfigureAwait(false);
 		}
