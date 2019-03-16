@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace TestAppCore
 {
@@ -9,5 +10,11 @@ namespace TestAppCore
 		int AddNumbers(int a, int b);
 
 		WrappedInt AddWrappedNumbers(WrappedInt a, WrappedInt b);
+
+		Task<int> AddAsync(int a, int b);
+
+		IList<T> Listify<T>(T item);
+
+		void AlwaysFails();
 	}
 }

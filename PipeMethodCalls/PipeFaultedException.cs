@@ -6,25 +6,25 @@ using System.Text;
 namespace PipeMethodCalls
 {
 	/// <summary>
-	/// Represents a failed invoke on the remote endpoint.
+	/// Represents an error that caused the pipe to become faulted.
 	/// </summary>
-	public class PipeInvokeFailedException : Exception
+	public class PipeFaultedException : Exception
 	{
 		/// <summary>
-		/// Initializes a new instance of the <see cref="PipeInvokeFailedException"/> class.
+		/// Initializes a new instance of the <see cref="PipeFaultedException"/> class.
 		/// </summary>
 		/// <param name="message">The exception message.</param>
-		public PipeInvokeFailedException(string message) 
+		public PipeFaultedException(string message) 
 			: base(message)
 		{
 		}
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="PipeInvokeFailedException"/> class.
+		/// Initializes a new instance of the <see cref="PipeFaultedException"/> class.
 		/// </summary>
 		/// <param name="message">The exception message.</param>
 		/// <param name="innerException">The inner exception.</param>
-		public PipeInvokeFailedException(string message, Exception innerException)
+		public PipeFaultedException(string message, Exception innerException)
 			: base(message, innerException)
 		{
 		}

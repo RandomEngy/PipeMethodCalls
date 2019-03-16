@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace TestAppCore
 {
@@ -14,6 +15,21 @@ namespace TestAppCore
 		public WrappedInt AddWrappedNumbers(WrappedInt a, WrappedInt b)
 		{
 			return new WrappedInt {Num = a.Num + b.Num};
+		}
+
+		public Task<int> AddAsync(int a, int b)
+		{
+			return Task.FromResult(a + b);
+		}
+
+		public IList<T> Listify<T>(T item)
+		{
+			return new List<T> { item };
+		}
+
+		public void AlwaysFails()
+		{
+			throw new InvalidOperationException("This method always fails.");
 		}
 	}
 }

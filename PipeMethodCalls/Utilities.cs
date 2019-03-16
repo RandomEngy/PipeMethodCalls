@@ -98,15 +98,23 @@ namespace PipeMethodCalls
 		}
 
 		/// <summary>
-		/// Ensures the invoker is non-null.
+		/// Ensures the pipe state is ready to invoke methods.
 		/// </summary>
-		/// <typeparam name="T">The type of invoker.</typeparam>
-		/// <param name="invoker">The invoker to check.</param>
-		public static void CheckInvoker<T>(MethodInvoker<T> invoker)
+		/// <param name="state"></param>
+		/// <param name="pipeFault"></param>
+		public static void EnsureReadyForInvoke(PipeState state, Exception pipeFault)
 		{
-			if (invoker == null)
+			if (state == PipeState.NotOpened)
 			{
-				throw new InvalidOperationException("Can only invoke operations after calling ConnectAsync and before calling Dispose.");
+				throw new PipeInvokeFailedException("Can only invoke methods after connecting the pipe.");
+			}
+			else if (state == PipeState.Closed)
+			{
+				throw new PipeInvokeFailedException("Cannot invoke methods after the pipe has closed.");
+			}
+			else if (state == PipeState.Faulted)
+			{
+				throw new PipeInvokeFailedException("Cannot invoke method. Pipe has faulted.", pipeFault);
 			}
 		}
 	}

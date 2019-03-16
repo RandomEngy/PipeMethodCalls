@@ -19,6 +19,7 @@ namespace PipeMethodCalls
 		/// </summary>
 		/// <param name="expression">The method to invoke.</param>
 		/// <param name="cancellationToken">A token to cancel the request.</param>
+		/// <exception cref="PipeInvokeFailedException">Thrown when the invoked method throws an exception.</exception>
 		Task InvokeAsync(Expression<Action<TRequesting>> expression, CancellationToken cancellationToken = default);
 
 		/// <summary>
@@ -26,6 +27,7 @@ namespace PipeMethodCalls
 		/// </summary>
 		/// <param name="expression">The method to invoke.</param>
 		/// <param name="cancellationToken">A token to cancel the request.</param>
+		/// <exception cref="PipeInvokeFailedException">Thrown when the invoked method throws an exception.</exception>
 		Task InvokeAsync(Expression<Func<TRequesting, Task>> expression, CancellationToken cancellationToken = default);
 
 		/// <summary>
@@ -35,6 +37,7 @@ namespace PipeMethodCalls
 		/// <param name="expression">The method to invoke.</param>
 		/// <param name="cancellationToken">A token to cancel the request.</param>
 		/// <returns>The method result.</returns>
+		/// <exception cref="PipeInvokeFailedException">Thrown when the invoked method throws an exception.</exception>
 		Task<TResult> InvokeAsync<TResult>(Expression<Func<TRequesting, Task<TResult>>> expression, CancellationToken cancellationToken = default);
 
 		/// <summary>
@@ -44,6 +47,7 @@ namespace PipeMethodCalls
 		/// <param name="expression">The method to invoke.</param>
 		/// <param name="cancellationToken">A token to cancel the request.</param>
 		/// <returns>The method result.</returns>
+		/// <exception cref="PipeInvokeFailedException">Thrown when the invoked method throws an exception.</exception>
 		Task<TResult> InvokeAsync<TResult>(Expression<Func<TRequesting, TResult>> expression, CancellationToken cancellationToken = default);
 	}
 }

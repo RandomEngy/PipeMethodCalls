@@ -23,14 +23,21 @@ namespace TestCallbackServerApp
 			var pipeServerWithCallback = new PipeServerWithCallback<IConcatenator, IAdder>("testpipe", () => new Adder());
 			pipeServerWithCallback.SetLogger(message => Console.WriteLine(message));
 
-			await pipeServerWithCallback.WaitForConnectionAsync();
+			try
+			{
+				await pipeServerWithCallback.WaitForConnectionAsync();
 
-			string concatResult = await pipeServerWithCallback.InvokeAsync(c => c.Concatenate("a", "b"));
-			Console.WriteLine("Concatenate result: " + concatResult);
+				string concatResult = await pipeServerWithCallback.InvokeAsync(c => c.Concatenate("a", "b"));
+				Console.WriteLine("Concatenate result: " + concatResult);
 
-			await pipeServerWithCallback.WaitForRemotePipeCloseAsync();
+				await pipeServerWithCallback.WaitForRemotePipeCloseAsync();
 
-			Console.WriteLine("Client disconnected.");
+				Console.WriteLine("Client disconnected.");
+			}
+			catch (Exception exception)
+			{
+				Console.WriteLine("Exception in pipe processing: " + exception);
+			}
 		}
 	}
 }

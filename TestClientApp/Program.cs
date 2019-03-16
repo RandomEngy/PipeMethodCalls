@@ -21,14 +21,21 @@ namespace TestClientApp
 			var pipeClientWithCallback = new PipeClient<IAdder>("testpipe");
 			pipeClientWithCallback.SetLogger(message => Console.WriteLine(message));
 
-			await pipeClientWithCallback.ConnectAsync().ConfigureAwait(false);
-			WrappedInt result = await pipeClientWithCallback.InvokeAsync(adder => adder.AddWrappedNumbers(new WrappedInt { Num = 1 }, new WrappedInt { Num = 3 })).ConfigureAwait(false);
+			try
+			{
+				await pipeClientWithCallback.ConnectAsync().ConfigureAwait(false);
+				WrappedInt result = await pipeClientWithCallback.InvokeAsync(adder => adder.AddWrappedNumbers(new WrappedInt { Num = 1 }, new WrappedInt { Num = 3 })).ConfigureAwait(false);
 
-			Console.WriteLine("Server add result: " + result.Num);
+				Console.WriteLine("Server add result: " + result.Num);
 
-			await pipeClientWithCallback.WaitForRemotePipeCloseAsync();
+				await pipeClientWithCallback.WaitForRemotePipeCloseAsync();
 
-			Console.WriteLine("Server closed pipe.");
+				Console.WriteLine("Server closed pipe.");
+			}
+			catch (Exception exception)
+			{
+				Console.WriteLine("Exception in pipe processing: " + exception);
+			}
 		}
 	}
 }

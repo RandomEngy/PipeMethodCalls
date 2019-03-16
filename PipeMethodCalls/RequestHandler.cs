@@ -116,9 +116,9 @@ namespace PipeMethodCalls
 					return PipeResponse.Success(request.CallId, result);
 				}
 			}
-			catch (Exception ex)
+			catch (Exception exception)
 			{
-				return PipeResponse.Failure(request.CallId, $"Internal error: {ex.Message}");
+				return PipeResponse.Failure(request.CallId, exception.ToString());
 			}
 		}
 	}

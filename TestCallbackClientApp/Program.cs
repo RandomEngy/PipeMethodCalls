@@ -22,14 +22,35 @@ namespace TestCallbackClientApp
 			var pipeClientWithCallback = new PipeClientWithCallback<IAdder, IConcatenator>("testpipe", () => new Concatenator());
 			pipeClientWithCallback.SetLogger(message => Console.WriteLine(message));
 
-			await pipeClientWithCallback.ConnectAsync().ConfigureAwait(false);
-			WrappedInt result = await pipeClientWithCallback.InvokeAsync(adder => adder.AddWrappedNumbers(new WrappedInt { Num = 1 }, new WrappedInt { Num = 3 })).ConfigureAwait(false);
+			try
+			{
+				await pipeClientWithCallback.ConnectAsync().ConfigureAwait(false);
+				WrappedInt result = await pipeClientWithCallback.InvokeAsync(adder => adder.AddWrappedNumbers(new WrappedInt { Num = 1 }, new WrappedInt { Num = 3 })).ConfigureAwait(false);
+				Console.WriteLine("Server wrapped add result: " + result.Num);
 
-			Console.WriteLine("Server add result: " + result.Num);
+				int asyncResult = await pipeClientWithCallback.InvokeAsync(adder => adder.AddAsync(4, 7)).ConfigureAwait(false);
+				Console.WriteLine("Server async add result: " + asyncResult);
 
-			await pipeClientWithCallback.WaitForRemotePipeCloseAsync();
+				IList<string> listifyResult = await pipeClientWithCallback.InvokeAsync(adder => adder.Listify("item")).ConfigureAwait(false);
+				Console.WriteLine("Server listify result: " + listifyResult[0]);
 
-			Console.WriteLine("Server closed pipe.");
+				try
+				{
+					await pipeClientWithCallback.InvokeAsync(adder => adder.AlwaysFails()).ConfigureAwait(false);
+				}
+				catch (PipeInvokeFailedException exception)
+				{
+					Console.WriteLine("Handled invoke exception:" + Environment.NewLine + exception);
+				}
+
+				await pipeClientWithCallback.WaitForRemotePipeCloseAsync();
+
+				Console.WriteLine("Server closed pipe.");
+			}
+			catch (Exception exception)
+			{
+				Console.WriteLine("Exception in pipe processing: " + exception);
+			}
 		}
 	}
 }

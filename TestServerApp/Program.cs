@@ -22,10 +22,17 @@ namespace TestServerApp
 			var pipeServerWithCallback = new PipeServer<IAdder>("testpipe", () => new Adder());
 			pipeServerWithCallback.SetLogger(message => Console.WriteLine(message));
 
-			await pipeServerWithCallback.WaitForConnectionAsync();
-			await pipeServerWithCallback.WaitForRemotePipeCloseAsync();
+			try
+			{
+				await pipeServerWithCallback.WaitForConnectionAsync();
+				await pipeServerWithCallback.WaitForRemotePipeCloseAsync();
 
-			Console.WriteLine("Client disconnected.");
+				Console.WriteLine("Client disconnected.");
+			}
+			catch (Exception exception)
+			{
+				Console.WriteLine("Exception in pipe processing: " + exception);
+			}
 		}
 	}
 }
