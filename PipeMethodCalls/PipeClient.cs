@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.IO.Pipes;
 using System.Linq.Expressions;
+using System.Security.Principal;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,6 +19,9 @@ namespace PipeMethodCalls
 	{
 		private readonly string pipeName;
 		private readonly string serverName;
+		private readonly PipeOptions? options;
+		private readonly TokenImpersonationLevel? impersonationLevel;
+		private readonly HandleInheritability? inheritability;
 		private MethodInvoker<TRequesting> invoker;
 		private NamedPipeClientStream rawPipeStream;
 		private PipeStreamWrapper wrappedPipeStream;
@@ -26,24 +31,52 @@ namespace PipeMethodCalls
 		private Exception pipeFault;
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="PipeClient"/> class.
+		/// Initializes a new instance of the <see cref="PipeClientWithCallback"/> class.
 		/// </summary>
-		/// <param name="pipeName">The pipe name.</param>
+		/// <param name="pipeName">The name of the pipe.</param>
 		public PipeClient(string pipeName)
+			: this(".", pipeName)
 		{
-			this.serverName = ".";
-			this.pipeName = pipeName;
 		}
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="PipeClient"/> class.
+		/// Initializes a new instance of the <see cref="PipeClientWithCallback"/> class.
 		/// </summary>
-		/// <param name="serverName">The machine the pipe is running on.</param>
-		/// <param name="name">The pipe name.</param>
-		public PipeClient(string serverName, string name)
+		/// <param name="pipeName">The name of the pipe.</param>
+		/// <param name="options">One of the enumeration values that determines how to open or create the pipe.</param>
+		/// <param name="impersonationLevel">One of the enumeration values that determines the security impersonation level.</param>
+		/// <param name="inheritability">One of the enumeration values that determines whether the underlying handle will be inheritable by child processes.</param>
+		public PipeClient(string pipeName, PipeOptions options, TokenImpersonationLevel impersonationLevel, HandleInheritability inheritability)
+			: this(".", pipeName, options, impersonationLevel, inheritability)
 		{
+		}
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="PipeClientWithCallback"/> class.
+		/// </summary>
+		/// <param name="serverName">The name of the server to connect to.</param>
+		/// <param name="pipeName">The name of the pipe.</param>
+		public PipeClient(string serverName, string pipeName)
+		{
+			this.pipeName = pipeName;
 			this.serverName = serverName;
-			this.pipeName = name;
+		}
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="PipeClientWithCallback"/> class.
+		/// </summary>
+		/// <param name="serverName">The name of the server to connect to.</param>
+		/// <param name="pipeName">The name of the pipe.</param>
+		/// <param name="options">One of the enumeration values that determines how to open or create the pipe.</param>
+		/// <param name="impersonationLevel">One of the enumeration values that determines the security impersonation level.</param>
+		/// <param name="inheritability">One of the enumeration values that determines whether the underlying handle will be inheritable by child processes.</param>
+		public PipeClient(string serverName, string pipeName, PipeOptions options, TokenImpersonationLevel impersonationLevel, HandleInheritability inheritability)
+		{
+			this.pipeName = pipeName;
+			this.serverName = serverName;
+			this.options = options;
+			this.impersonationLevel = impersonationLevel;
+			this.inheritability = inheritability;
 		}
 
 		/// <summary>
@@ -73,7 +106,15 @@ namespace PipeMethodCalls
 
 			this.logger.Log(() => $"Connecting to named pipe '{this.pipeName}' on machine {this.serverName}...");
 
-			this.rawPipeStream = new NamedPipeClientStream(this.serverName, this.pipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
+			if (this.options != null)
+			{
+				this.rawPipeStream = new NamedPipeClientStream(this.serverName, this.pipeName, PipeDirection.InOut, this.options.Value | PipeOptions.Asynchronous, this.impersonationLevel.Value, this.inheritability.Value);
+			}
+			else
+			{
+				this.rawPipeStream = new NamedPipeClientStream(this.serverName, this.pipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
+			}
+
 			await this.rawPipeStream.ConnectAsync(cancellationToken).ConfigureAwait(false);
 			this.logger.Log(() => "Connected.");
 

@@ -16,6 +16,7 @@ namespace PipeMethodCalls
 	{
 		private readonly string pipeName;
 		private readonly Func<THandling> handlerFactoryFunc;
+		private readonly PipeOptions? pipeOptions;
 		private NamedPipeServerStream rawPipeStream;
 		private PipeStreamWrapper wrappedPipeStream;
 		private CancellationTokenSource workLoopCancellationTokenSource;
@@ -28,10 +29,12 @@ namespace PipeMethodCalls
 		/// </summary>
 		/// <param name="pipeName">The pipe name.</param>
 		/// <param name="handlerFactoryFunc">A factory function to provide the handler implementation.</param>
-		public PipeServer(string pipeName, Func<THandling> handlerFactoryFunc)
+		/// <param name="pipeOptions">Extra options for the pipe.</param>
+		public PipeServer(string pipeName, Func<THandling> handlerFactoryFunc, PipeOptions? pipeOptions = null)
 		{
 			this.pipeName = pipeName;
 			this.handlerFactoryFunc = handlerFactoryFunc;
+			this.pipeOptions = pipeOptions;
 		}
 
 		/// <summary>
@@ -59,7 +62,17 @@ namespace PipeMethodCalls
 				throw new InvalidOperationException("Can only call WaitForConnectionAsync once");
 			}
 
-			this.rawPipeStream = new NamedPipeServerStream(this.pipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Message, PipeOptions.Asynchronous);
+			PipeOptions pipeOptionsToPass;
+			if (this.pipeOptions == null)
+			{
+				pipeOptionsToPass = PipeOptions.Asynchronous;
+			}
+			else
+			{
+				pipeOptionsToPass = this.pipeOptions.Value | PipeOptions.Asynchronous;
+			}
+
+			this.rawPipeStream = new NamedPipeServerStream(this.pipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Message, pipeOptionsToPass);
 			this.rawPipeStream.ReadMode = PipeTransmissionMode.Message;
 
 			this.logger.Log(() => $"Set up named pipe server '{this.pipeName}'.");
