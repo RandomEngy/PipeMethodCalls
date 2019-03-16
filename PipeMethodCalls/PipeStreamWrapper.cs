@@ -72,7 +72,6 @@ namespace PipeMethodCalls
 			{
 				case MessageType.Request:
 					this.logger.Log(() => "Handling request" + Environment.NewLine + json);
-					System.Diagnostics.Debug.WriteLine("Handling request" + Environment.NewLine + json);
 					PipeRequest request = JsonConvert.DeserializeObject<PipeRequest>(json, this.serializerSettings);
 
 					if (this.RequestHandler == null)

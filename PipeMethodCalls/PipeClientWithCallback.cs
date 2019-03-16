@@ -17,7 +17,9 @@ namespace PipeMethodCalls
 		private NamedPipeClientStream rawPipeStream;
 		private PipeStreamWrapper wrappedPipeStream;
 		private CancellationTokenSource workLoopCancellationTokenSource;
+		private TaskCompletionSource<object> pipeCloseCompletionSource;
 		private Action<string> logger;
+		private bool remotePipeClosed;
 
 		public PipeClientWithCallback(string name, Func<THandling> handlerFactoryFunc)
 		{
@@ -55,14 +57,52 @@ namespace PipeMethodCalls
 			this.StartProcessing();
 		}
 
-		public async void StartProcessing()
+		/// <summary>
+		/// Wait for the other end to close the pipe.
+		/// </summary>
+		/// <param name="cancellationToken">A token to cancel the request.</param>
+		public Task WaitForRemotePipeCloseAsync(CancellationToken cancellationToken = default)
 		{
-			this.workLoopCancellationTokenSource = new CancellationTokenSource();
-
-			// Process messages until canceled.
-			while (!this.workLoopCancellationTokenSource.IsCancellationRequested)
+			if (this.remotePipeClosed)
 			{
-				await this.wrappedPipeStream.ProcessMessageAsync(this.workLoopCancellationTokenSource.Token).ConfigureAwait(false);
+				return Task.CompletedTask;
+			}
+
+			if (this.pipeCloseCompletionSource == null)
+			{
+				this.pipeCloseCompletionSource = new TaskCompletionSource<object>();
+			}
+
+			cancellationToken.Register(() =>
+			{
+				this.pipeCloseCompletionSource.SetCanceled();
+			});
+
+			return this.pipeCloseCompletionSource.Task;
+		}
+
+		private async void StartProcessing()
+		{
+			try
+			{
+				this.workLoopCancellationTokenSource = new CancellationTokenSource();
+
+				// Process messages until canceled.
+				while (!this.workLoopCancellationTokenSource.IsCancellationRequested)
+				{
+					await this.wrappedPipeStream.ProcessMessageAsync(this.workLoopCancellationTokenSource.Token).ConfigureAwait(false);
+				}
+			}
+			catch (Exception)
+			{
+			}
+			finally
+			{
+				this.remotePipeClosed = true;
+				if (this.pipeCloseCompletionSource != null)
+				{
+					this.pipeCloseCompletionSource.SetResult(null);
+				}
 			}
 		}
 

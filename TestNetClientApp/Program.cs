@@ -11,26 +11,25 @@ namespace TestNetClientApp
 {
 	class Program
 	{
-		private static PipeClientWithCallback<IAdder, IConcatenator> pipeClientWithCallback;
-		private static CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
-
 		static void Main(string[] args)
 		{
-			pipeClientWithCallback = new PipeClientWithCallback<IAdder, IConcatenator>("testpipe", () => new Concatenator());
-			pipeClientWithCallback.SetLogger(message => Console.WriteLine(message));
-
-			RunClientAsync(pipeClientWithCallback);
-
+			RunClientAsync();
 			Console.ReadKey();
-			cancellationTokenSource.Cancel();
 		}
 
-		private static async Task RunClientAsync(PipeClientWithCallback<IAdder, IConcatenator> client)
+		private static async Task RunClientAsync()
 		{
-			await pipeClientWithCallback.ConnectAsync(cancellationTokenSource.Token).ConfigureAwait(false);
+			var pipeClientWithCallback = new PipeClientWithCallback<IAdder, IConcatenator>("testpipe", () => new Concatenator());
+			pipeClientWithCallback.SetLogger(message => Console.WriteLine(message));
+
+			await pipeClientWithCallback.ConnectAsync().ConfigureAwait(false);
 			WrappedInt result = await pipeClientWithCallback.InvokeAsync(adder => adder.AddWrappedNumbers(new WrappedInt { Num = 1 }, new WrappedInt { Num = 3 })).ConfigureAwait(false);
 
 			Console.WriteLine("Server add result: " + result.Num);
+
+			await pipeClientWithCallback.WaitForRemotePipeCloseAsync();
+
+			Console.WriteLine("Server closed pipe.");
 		}
 	}
 }

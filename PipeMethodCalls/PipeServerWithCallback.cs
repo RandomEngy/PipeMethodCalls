@@ -16,7 +16,9 @@ namespace PipeMethodCalls
 		private NamedPipeServerStream rawPipeStream;
 		private PipeStreamWrapper wrappedPipeStream;
 		private CancellationTokenSource workLoopCancellationTokenSource;
+		private TaskCompletionSource<object> pipeCloseCompletionSource;
 		private Action<string> logger;
+		private bool remotePipeOpen;
 
 		public PipeServerWithCallback(string name, Func<THandling> handlerFactoryFunc)
 		{
@@ -29,32 +31,85 @@ namespace PipeMethodCalls
 			this.logger = logger;
 		}
 
-		public async Task ConnectAsync(CancellationToken cancellationToken = default)
+		public async Task WaitForConnectionAsync(CancellationToken cancellationToken = default)
 		{
-			this.logger.Log(() => $"Setting up named pipe server '{this.name}'...");
-			this.rawPipeStream = new NamedPipeServerStream(this.name, PipeDirection.InOut, 1, PipeTransmissionMode.Message, PipeOptions.Asynchronous);
-			this.rawPipeStream.ReadMode = PipeTransmissionMode.Message;
+			if (this.remotePipeOpen)
+			{
+				throw new InvalidOperationException("Pipe is already connected.");
+			}
+
+			bool firstConnection = this.rawPipeStream == null;
+
+			if (firstConnection)
+			{
+				this.rawPipeStream = new NamedPipeServerStream(this.name, PipeDirection.InOut, 1, PipeTransmissionMode.Message, PipeOptions.Asynchronous);
+				this.rawPipeStream.ReadMode = PipeTransmissionMode.Message;
+			}
+
+			this.logger.Log(() => $"Set up named pipe server '{this.name}'.");
 
 			await this.rawPipeStream.WaitForConnectionAsync(cancellationToken).ConfigureAwait(false);
+			this.remotePipeOpen = true;
+
 			this.logger.Log(() => "Connected to client.");
 
-			this.wrappedPipeStream = new PipeStreamWrapper(this.rawPipeStream, this.logger);
-			this.invoker = new MethodInvoker<TRequesting>(this.wrappedPipeStream);
-			var requestHandler = new RequestHandler<THandling>(this.wrappedPipeStream, this.handlerFactoryFunc);
+			if (firstConnection)
+			{
+				this.wrappedPipeStream = new PipeStreamWrapper(this.rawPipeStream, this.logger);
+				this.invoker = new MethodInvoker<TRequesting>(this.wrappedPipeStream);
+				var requestHandler = new RequestHandler<THandling>(this.wrappedPipeStream, this.handlerFactoryFunc);
+			}
 
 			this.StartProcessing();
 		}
 
-		public async void StartProcessing()
+		/// <summary>
+		/// Wait for the other end to close the pipe.
+		/// </summary>
+		/// <param name="cancellationToken">A token to cancel the request.</param>
+		public Task WaitForRemotePipeCloseAsync(CancellationToken cancellationToken = default)
 		{
-			// TODO: Add top-level error handling
-
-			this.workLoopCancellationTokenSource = new CancellationTokenSource();
-
-			// Process messages until canceled.
-			while (!this.workLoopCancellationTokenSource.IsCancellationRequested)
+			if (!this.remotePipeOpen)
 			{
-				await this.wrappedPipeStream.ProcessMessageAsync(this.workLoopCancellationTokenSource.Token).ConfigureAwait(false);
+				return Task.CompletedTask;
+			}
+
+			if (this.pipeCloseCompletionSource == null)
+			{
+				this.pipeCloseCompletionSource = new TaskCompletionSource<object>();
+			}
+
+			cancellationToken.Register(() =>
+			{
+				this.pipeCloseCompletionSource.SetCanceled();
+			});
+
+			return this.pipeCloseCompletionSource.Task;
+		}
+
+		private async void StartProcessing()
+		{
+			try
+			{
+				this.workLoopCancellationTokenSource = new CancellationTokenSource();
+
+				// Process messages until canceled.
+				while (!this.workLoopCancellationTokenSource.IsCancellationRequested)
+				{
+					await this.wrappedPipeStream.ProcessMessageAsync(this.workLoopCancellationTokenSource.Token).ConfigureAwait(false);
+				}
+			}
+			catch (Exception)
+			{
+				// Cancel or close will fall in here
+			}
+			finally
+			{
+				this.remotePipeOpen = false;
+				if (this.pipeCloseCompletionSource != null)
+				{
+					this.pipeCloseCompletionSource.SetResult(null);
+				}
 			}
 		}
 

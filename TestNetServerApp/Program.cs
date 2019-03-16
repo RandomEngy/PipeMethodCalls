@@ -13,14 +13,21 @@ namespace TestNetServerApp
 	{
 		static void Main(string[] args)
 		{
-			var pipeServerWithCallback = new PipeServerWithCallback<IConcatenator, IAdder>("testpipe", () => new Adder());
-			pipeServerWithCallback.SetLogger(message => Console.WriteLine(message));
-			CancellationTokenSource cSource = new CancellationTokenSource();
-
-			Task task = pipeServerWithCallback.ConnectAsync(cSource.Token);
+			RunServerAsync();
 
 			Console.ReadKey();
-			cSource.Cancel();
+		}
+
+		private static async Task RunServerAsync()
+		{
+			var pipeServerWithCallback = new PipeServerWithCallback<IConcatenator, IAdder>("testpipe", () => new Adder());
+			pipeServerWithCallback.SetLogger(message => Console.WriteLine(message));
+
+			await pipeServerWithCallback.WaitForConnectionAsync();
+
+			await pipeServerWithCallback.WaitForRemotePipeCloseAsync();
+
+			Console.WriteLine("Client disconnected.");
 		}
 	}
 }
