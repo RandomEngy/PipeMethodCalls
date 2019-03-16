@@ -14,17 +14,24 @@ namespace PipeMethodCalls
 	/// <typeparam name="TRequesting">The request interface.</typeparam>
 	internal class MethodInvoker<TRequesting> : IResponseHandler
 	{
-		private readonly PipeStreamWrapper pipeStream;
+		private readonly PipeStreamWrapper pipeStreamWrapper;
 		private Dictionary<long, PendingCall> pendingCalls = new Dictionary<long, PendingCall>();
 		private long currentCall;
 
-		public MethodInvoker(PipeStreamWrapper pipeStream)
+		/// <summary>
+		/// Initializes a new instance of the <see cref="MethodInvoker" /> class.
+		/// </summary>
+		/// <param name="pipeStreamWrapper">The pipe stream wrapper to use for invocation and response handling.</param>
+		public MethodInvoker(PipeStreamWrapper pipeStreamWrapper)
 		{
-			this.pipeStream = pipeStream;
-
-			this.pipeStream.ResponseHandler = this;
+			this.pipeStreamWrapper = pipeStreamWrapper;
+			this.pipeStreamWrapper.ResponseHandler = this;
 		}
 
+		/// <summary>
+		/// Handles a response message received from a remote endpoint.
+		/// </summary>
+		/// <param name="response">The response message to handle.</param>
 		public void HandleResponse(PipeResponse response)
 		{
 			if (!this.pendingCalls.TryGetValue(response.CallId, out PendingCall pendingCall))
@@ -35,19 +42,51 @@ namespace PipeMethodCalls
 			pendingCall.TaskCompletionSource.TrySetResult(response);
 		}
 
-		public async Task InvokeAsync(Expression<Action<TRequesting>> expression, CancellationToken cancellationToken = default(CancellationToken))
+		/// <summary>
+		/// Invokes a method on the server.
+		/// </summary>
+		/// <param name="expression">The method to invoke.</param>
+		/// <param name="cancellationToken">A token to cancel the request.</param>
+		public async Task InvokeAsync(Expression<Action<TRequesting>> expression, CancellationToken cancellationToken = default)
 		{
+			// Sync, no result
+
 			PipeResponse response = await this.GetResponseFromExpressionAsync(expression, cancellationToken);
 
 			if (!response.Succeeded)
 			{
-				// TODO: Custom exception
-				throw new InvalidOperationException(response.Error);
+				throw new PipeInvokeFailedException(response.Error);
 			}
 		}
 
-		public async Task<TResult> InvokeAsync<TResult>(Expression<Func<TRequesting, TResult>> expression, CancellationToken cancellationToken = default(CancellationToken))
+		/// <summary>
+		/// Invokes a method on the server.
+		/// </summary>
+		/// <param name="expression">The method to invoke.</param>
+		/// <param name="cancellationToken">A token to cancel the request.</param>
+		public async Task InvokeAsync(Expression<Func<TRequesting, Task>> expression, CancellationToken cancellationToken = default)
 		{
+			// Async, no result
+
+			PipeResponse response = await this.GetResponseFromExpressionAsync(expression, cancellationToken);
+
+			if (!response.Succeeded)
+			{
+				throw new PipeInvokeFailedException(response.Error);
+			}
+		}
+
+		/// <summary>
+		/// Invokes a method on the server.
+		/// </summary>
+		/// <typeparam name="TResult">The type of result from the method.</typeparam>
+		/// <param name="expression">The method to invoke.</param>
+		/// <param name="cancellationToken">A token to cancel the request.</param>
+		/// <returns>The method result.</returns>
+		public async Task<TResult> InvokeAsync<TResult>(Expression<Func<TRequesting, TResult>> expression, CancellationToken cancellationToken = default)
+		{
+			// Sync with result
+
 			PipeResponse response = await this.GetResponseFromExpressionAsync(expression, cancellationToken);
 
 			if (response.Succeeded)
@@ -63,24 +102,21 @@ namespace PipeMethodCalls
 			}
 			else
 			{
-				// TODO: Custom exception
-				throw new InvalidOperationException(response.Error);
+				throw new PipeInvokeFailedException(response.Error);
 			}
 		}
 
-		public async Task InvokeAsync(Expression<Func<TRequesting, Task>> expression, CancellationToken cancellationToken = default(CancellationToken))
-		{
-			PipeResponse response = await this.GetResponseFromExpressionAsync(expression, cancellationToken);
-
-			if (!response.Succeeded)
-			{
-				// TODO: Custom exception
-				throw new InvalidOperationException(response.Error);
-			}
-		}
-
+		/// <summary>
+		/// Invokes a method on the server.
+		/// </summary>
+		/// <typeparam name="TResult">The type of result from the method.</typeparam>
+		/// <param name="expression">The method to invoke.</param>
+		/// <param name="cancellationToken">A token to cancel the request.</param>
+		/// <returns>The method result.</returns>
 		public async Task<TResult> InvokeAsync<TResult>(Expression<Func<TRequesting, Task<TResult>>> expression, CancellationToken cancellationToken = default(CancellationToken))
 		{
+			// Async with result
+
 			PipeResponse response = await this.GetResponseFromExpressionAsync(expression, cancellationToken);
 
 			if (response.Succeeded)
@@ -96,17 +132,27 @@ namespace PipeMethodCalls
 			}
 			else
 			{
-				// TODO: Custom exception
-				throw new InvalidOperationException(response.Error);
+				throw new PipeInvokeFailedException(response.Error);
 			}
 		}
 
+		/// <summary>
+		/// Gets a response from the given expression.
+		/// </summary>
+		/// <param name="expression">The expression to execute.</param>
+		/// <param name="cancellationToken">A token to cancel the request.</param>
+		/// <returns>A response for the given expression.</returns>
 		private async Task<PipeResponse> GetResponseFromExpressionAsync(Expression expression, CancellationToken cancellationToken)
 		{
 			PipeRequest request = this.CreateRequest(expression);
 			return await this.GetResponseAsync(request, cancellationToken).ConfigureAwait(false);
 		}
 
+		/// <summary>
+		/// Creates a pipe request from the given expression.
+		/// </summary>
+		/// <param name="expression">The expression to execute.</param>
+		/// <returns>The request to send over the pipe to execute that expression.</returns>
 		private PipeRequest CreateRequest(Expression expression)
 		{
 			this.currentCall++;
@@ -130,12 +176,18 @@ namespace PipeMethodCalls
 			};
 		}
 
+		/// <summary>
+		/// Gets a pipe response for the given pipe request.
+		/// </summary>
+		/// <param name="request">The request to send.</param>
+		/// <param name="cancellationToken">A token to cancel the request.</param>
+		/// <returns>The pipe response.</returns>
 		private async Task<PipeResponse> GetResponseAsync(PipeRequest request, CancellationToken cancellationToken)
 		{
 			var pendingCall = new PendingCall();
 			this.pendingCalls.Add(request.CallId, pendingCall);
 
-			await this.pipeStream.SendRequestAsync(request, cancellationToken).ConfigureAwait(false);
+			await this.pipeStreamWrapper.SendRequestAsync(request, cancellationToken).ConfigureAwait(false);
 
 			cancellationToken.Register(
 				() =>

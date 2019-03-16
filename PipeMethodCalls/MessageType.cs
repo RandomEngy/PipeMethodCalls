@@ -4,6 +4,9 @@ using System.Text;
 
 namespace PipeMethodCalls
 {
+	/// <summary>
+	/// The pipe message type.
+	/// </summary>
 	internal enum MessageType
 	{
 		Request = 0,

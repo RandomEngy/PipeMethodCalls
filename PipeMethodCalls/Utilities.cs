@@ -9,24 +9,34 @@ using Newtonsoft.Json.Linq;
 
 namespace PipeMethodCalls
 {
+	/// <summary>
+	/// Utility functions.
+	/// </summary>
 	internal static class Utilities
 	{
-		public static bool TryConvert(object origValue, Type destType, out object destValue)
+		/// <summary>
+		/// Tries to convert the given value to the given type.
+		/// </summary>
+		/// <param name="valueToConvert">The value to convert.</param>
+		/// <param name="targetType">The target type.</param>
+		/// <param name="targetValue">The variable to store the converted value in.</param>
+		/// <returns>True if the conversion succeeded.</returns>
+		public static bool TryConvert(object valueToConvert, Type targetType, out object targetValue)
 		{
-			if (destType.IsInstanceOfType(origValue))
+			if (targetType.IsInstanceOfType(valueToConvert))
 			{
-				// copy value directly if it can be assigned to destType
-				destValue = origValue;
+				// copy value directly if it can be assigned to targetType
+				targetValue = valueToConvert;
 				return true;
 			}
 
-			if (destType.IsEnum)
+			if (targetType.IsEnum)
 			{
-				if (origValue is string str)
+				if (valueToConvert is string str)
 				{
 					try
 					{
-						destValue = Enum.Parse(destType, str, ignoreCase: true);
+						targetValue = Enum.Parse(targetType, str, ignoreCase: true);
 						return true;
 					}
 					catch
@@ -36,7 +46,7 @@ namespace PipeMethodCalls
 				{
 					try
 					{
-						destValue = Enum.ToObject(destType, origValue);
+						targetValue = Enum.ToObject(targetType, valueToConvert);
 						return true;
 					}
 					catch
@@ -44,32 +54,32 @@ namespace PipeMethodCalls
 				}
 			}
 
-			if (origValue is string str2 && destType == typeof(Guid))
+			if (valueToConvert is string string2 && targetType == typeof(Guid))
 			{
-				if (Guid.TryParse(str2, out Guid result))
+				if (Guid.TryParse(string2, out Guid result))
 				{
-					destValue = result;
+					targetValue = result;
 					return true;
 				}
 			}
 
-			if (origValue is JObject jObj)
+			if (valueToConvert is JObject jObj)
 			{
-				// rely on JSON.Net to convert complexe type
-				destValue = jObj.ToObject(destType);
+				// Rely on JSON.Net to convert complex type
+				targetValue = jObj.ToObject(targetType);
 				// TODO: handle error
 				return true;
 			}
 
-			if (origValue is JArray jArray)
+			if (valueToConvert is JArray jArray)
 			{
-				destValue = jArray.ToObject(destType);
+				targetValue = jArray.ToObject(targetType);
 				return true;
 			}
 
 			try
 			{
-				destValue = Convert.ChangeType(origValue, destType);
+				targetValue = Convert.ChangeType(valueToConvert, targetType);
 				return true;
 			}
 			catch
@@ -77,16 +87,21 @@ namespace PipeMethodCalls
 
 			try
 			{
-				destValue = JsonConvert.DeserializeObject(JsonConvert.SerializeObject(origValue), destType);
+				targetValue = JsonConvert.DeserializeObject(JsonConvert.SerializeObject(valueToConvert), targetType);
 				return true;
 			}
 			catch
 			{ }
 
-			destValue = null;
+			targetValue = null;
 			return false;
 		}
 
+		/// <summary>
+		/// Ensures the invoker is non-null.
+		/// </summary>
+		/// <typeparam name="T">The type of invoker.</typeparam>
+		/// <param name="invoker">The invoker to check.</param>
 		public static void CheckInvoker<T>(MethodInvoker<T> invoker)
 		{
 			if (invoker == null)

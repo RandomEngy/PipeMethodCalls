@@ -8,9 +8,16 @@ using System.Threading.Tasks;
 
 namespace PipeMethodCalls
 {
+	/// <summary>
+	/// A named pipe server with a callback channel.
+	/// </summary>
+	/// <typeparam name="TRequesting">The callback channel interface that the client will be handling.</typeparam>
+	/// <typeparam name="THandling">The interface for requests that this server will be handling.</typeparam>
 	public class PipeServerWithCallback<TRequesting, THandling> : IDisposable, IPipeServerWithCallback<TRequesting>
+		where TRequesting : class
+		where THandling : class
 	{
-		private readonly string name;
+		private readonly string pipeName;
 		private readonly Func<THandling> handlerFactoryFunc;
 		private MethodInvoker<TRequesting> invoker;
 		private NamedPipeServerStream rawPipeStream;
@@ -20,45 +27,50 @@ namespace PipeMethodCalls
 		private Action<string> logger;
 		private bool remotePipeOpen;
 
-		public PipeServerWithCallback(string name, Func<THandling> handlerFactoryFunc)
+		/// <summary>
+		/// Initializes a new instance of the <see cref="PipeServerWithCallback"/> class.
+		/// </summary>
+		/// <param name="pipeName">The pipe name.</param>
+		/// <param name="handlerFactoryFunc">A factory function to provide the handler implementation.</param>
+		public PipeServerWithCallback(string pipeName, Func<THandling> handlerFactoryFunc)
 		{
-			this.name = name;
+			this.pipeName = pipeName;
 			this.handlerFactoryFunc = handlerFactoryFunc;
 		}
 
+		/// <summary>
+		/// Sets up the given action as a logger for the module.
+		/// </summary>
+		/// <param name="logger">The logger action.</param>
 		public void SetLogger(Action<string> logger)
 		{
 			this.logger = logger;
 		}
 
+		/// <summary>
+		/// Waits for a client to connect to the pipe.
+		/// </summary>
+		/// <param name="cancellationToken">A token to cancel the request.</param>
 		public async Task WaitForConnectionAsync(CancellationToken cancellationToken = default)
 		{
-			if (this.remotePipeOpen)
+			if (this.rawPipeStream != null)
 			{
-				throw new InvalidOperationException("Pipe is already connected.");
+				throw new InvalidOperationException("Can only call WaitForConnectionAsync once");
 			}
 
-			bool firstConnection = this.rawPipeStream == null;
+			this.rawPipeStream = new NamedPipeServerStream(this.pipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Message, PipeOptions.Asynchronous);
+			this.rawPipeStream.ReadMode = PipeTransmissionMode.Message;
 
-			if (firstConnection)
-			{
-				this.rawPipeStream = new NamedPipeServerStream(this.name, PipeDirection.InOut, 1, PipeTransmissionMode.Message, PipeOptions.Asynchronous);
-				this.rawPipeStream.ReadMode = PipeTransmissionMode.Message;
-			}
-
-			this.logger.Log(() => $"Set up named pipe server '{this.name}'.");
+			this.logger.Log(() => $"Set up named pipe server '{this.pipeName}'.");
 
 			await this.rawPipeStream.WaitForConnectionAsync(cancellationToken).ConfigureAwait(false);
 			this.remotePipeOpen = true;
 
 			this.logger.Log(() => "Connected to client.");
 
-			if (firstConnection)
-			{
-				this.wrappedPipeStream = new PipeStreamWrapper(this.rawPipeStream, this.logger);
-				this.invoker = new MethodInvoker<TRequesting>(this.wrappedPipeStream);
-				var requestHandler = new RequestHandler<THandling>(this.wrappedPipeStream, this.handlerFactoryFunc);
-			}
+			this.wrappedPipeStream = new PipeStreamWrapper(this.rawPipeStream, this.logger);
+			this.invoker = new MethodInvoker<TRequesting>(this.wrappedPipeStream);
+			var requestHandler = new RequestHandler<THandling>(this.wrappedPipeStream, this.handlerFactoryFunc);
 
 			this.StartProcessing();
 		}
@@ -87,6 +99,9 @@ namespace PipeMethodCalls
 			return this.pipeCloseCompletionSource.Task;
 		}
 
+		/// <summary>
+		/// Starts the processing loop on the pipe.
+		/// </summary>
 		private async void StartProcessing()
 		{
 			try
@@ -113,24 +128,48 @@ namespace PipeMethodCalls
 			}
 		}
 
+		/// <summary>
+		/// Invokes a method on the remote endpoint.
+		/// </summary>
+		/// <param name="expression">The method to invoke.</param>
+		/// <param name="cancellationToken">A token to cancel the request.</param>
 		public Task InvokeAsync(Expression<Action<TRequesting>> expression, CancellationToken cancellationToken = default)
 		{
 			Utilities.CheckInvoker(this.invoker);
 			return this.invoker.InvokeAsync(expression, cancellationToken);
 		}
 
-		public Task<TResult> InvokeAsync<TResult>(Expression<Func<TRequesting, TResult>> expression, CancellationToken cancellationToken = default)
-		{
-			Utilities.CheckInvoker(this.invoker);
-			return this.invoker.InvokeAsync(expression, cancellationToken);
-		}
-
+		/// <summary>
+		/// Invokes a method on the remote endpoint.
+		/// </summary>
+		/// <param name="expression">The method to invoke.</param>
+		/// <param name="cancellationToken">A token to cancel the request.</param>
 		public Task InvokeAsync(Expression<Func<TRequesting, Task>> expression, CancellationToken cancellationToken = default)
 		{
 			Utilities.CheckInvoker(this.invoker);
 			return this.invoker.InvokeAsync(expression, cancellationToken);
 		}
 
+		/// <summary>
+		/// Invokes a method on the remote endpoint.
+		/// </summary>
+		/// <typeparam name="TResult">The type of result from the method.</typeparam>
+		/// <param name="expression">The method to invoke.</param>
+		/// <param name="cancellationToken">A token to cancel the request.</param>
+		/// <returns>The method result.</returns>
+		public Task<TResult> InvokeAsync<TResult>(Expression<Func<TRequesting, TResult>> expression, CancellationToken cancellationToken = default)
+		{
+			Utilities.CheckInvoker(this.invoker);
+			return this.invoker.InvokeAsync(expression, cancellationToken);
+		}
+
+		/// <summary>
+		/// Invokes a method on the remote endpoint.
+		/// </summary>
+		/// <typeparam name="TResult">The type of result from the method.</typeparam>
+		/// <param name="expression">The method to invoke.</param>
+		/// <param name="cancellationToken">A token to cancel the request.</param>
+		/// <returns>The method result.</returns>
 		public Task<TResult> InvokeAsync<TResult>(Expression<Func<TRequesting, Task<TResult>>> expression, CancellationToken cancellationToken = default)
 		{
 			Utilities.CheckInvoker(this.invoker);
@@ -159,6 +198,9 @@ namespace PipeMethodCalls
 			}
 		}
 
+		/// <summary>
+		/// Closes the pipe.
+		/// </summary>
 		public void Dispose()
 		{
 			this.Dispose(true);

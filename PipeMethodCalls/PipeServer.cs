@@ -7,9 +7,14 @@ using System.Threading.Tasks;
 
 namespace PipeMethodCalls
 {
+	/// <summary>
+	/// A named pipe server.
+	/// </summary>
+	/// <typeparam name="THandling">The interface for requests that this server will be handling.</typeparam>
 	public class PipeServer<THandling> : IPipeServer, IDisposable
+		where THandling : class
 	{
-		private readonly string name;
+		private readonly string pipeName;
 		private readonly Func<THandling> handlerFactoryFunc;
 		private NamedPipeServerStream rawPipeStream;
 		private PipeStreamWrapper wrappedPipeStream;
@@ -18,17 +23,30 @@ namespace PipeMethodCalls
 		private Action<string> logger;
 		private bool remotePipeOpen;
 
-		public PipeServer(string name, Func<THandling> handlerFactoryFunc)
+		/// <summary>
+		/// Initializes a new instance of the <see cref="PipeServer"/> class.
+		/// </summary>
+		/// <param name="pipeName">The pipe name.</param>
+		/// <param name="handlerFactoryFunc">A factory function to provide the handler implementation.</param>
+		public PipeServer(string pipeName, Func<THandling> handlerFactoryFunc)
 		{
-			this.name = name;
+			this.pipeName = pipeName;
 			this.handlerFactoryFunc = handlerFactoryFunc;
 		}
 
+		/// <summary>
+		/// Sets up the given action as a logger for the module.
+		/// </summary>
+		/// <param name="logger">The logger action.</param>
 		public void SetLogger(Action<string> logger)
 		{
 			this.logger = logger;
 		}
 
+		/// <summary>
+		/// Waits for a client to connect to the pipe.
+		/// </summary>
+		/// <param name="cancellationToken">A token to cancel the request.</param>
 		public async Task WaitForConnectionAsync(CancellationToken cancellationToken = default)
 		{
 			if (this.remotePipeOpen)
@@ -40,11 +58,11 @@ namespace PipeMethodCalls
 
 			if (firstConnection)
 			{
-				this.rawPipeStream = new NamedPipeServerStream(this.name, PipeDirection.InOut, 1, PipeTransmissionMode.Message, PipeOptions.Asynchronous);
+				this.rawPipeStream = new NamedPipeServerStream(this.pipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Message, PipeOptions.Asynchronous);
 				this.rawPipeStream.ReadMode = PipeTransmissionMode.Message;
 			}
 
-			this.logger.Log(() => $"Set up named pipe server '{this.name}'.");
+			this.logger.Log(() => $"Set up named pipe server '{this.pipeName}'.");
 
 			await this.rawPipeStream.WaitForConnectionAsync(cancellationToken).ConfigureAwait(false);
 			this.remotePipeOpen = true;
@@ -84,6 +102,9 @@ namespace PipeMethodCalls
 			return this.pipeCloseCompletionSource.Task;
 		}
 
+		/// <summary>
+		/// Starts the processing loop on the pipe.
+		/// </summary>
 		private async void StartProcessing()
 		{
 			try
@@ -131,6 +152,9 @@ namespace PipeMethodCalls
 			}
 		}
 
+		/// <summary>
+		/// Closes the pipe.
+		/// </summary>
 		public void Dispose()
 		{
 			this.Dispose(true);

@@ -13,31 +13,45 @@ namespace PipeMethodCalls
 	/// <typeparam name="THandling">The interface for the method requests.</typeparam>
 	internal class RequestHandler<THandling> : IRequestHandler
 	{
-		private readonly Func<THandling> handlerImplementation;
-		private readonly PipeStreamWrapper pipeStream;
+		private readonly Func<THandling> handlerFactoryFunc;
+		private readonly PipeStreamWrapper pipeStreamWrapper;
 
-		public RequestHandler(PipeStreamWrapper pipeStream, Func<THandling> handlerImplementation)
+		/// <summary>
+		/// Initializes a new instance of the <see cref="RequestHandler"/> class.
+		/// </summary>
+		/// <param name="pipeStreamWrapper">The underlying pipe stream wrapper.</param>
+		/// <param name="handlerFactoryFunc"></param>
+		public RequestHandler(PipeStreamWrapper pipeStreamWrapper, Func<THandling> handlerFactoryFunc)
 		{
-			this.pipeStream = pipeStream;
-			this.handlerImplementation = handlerImplementation;
+			this.pipeStreamWrapper = pipeStreamWrapper;
+			this.handlerFactoryFunc = handlerFactoryFunc;
 
-			this.pipeStream.RequestHandler = this;
+			this.pipeStreamWrapper.RequestHandler = this;
 		}
 
+		/// <summary>
+		/// Handles a request message received from a remote endpoint.
+		/// </summary>
+		/// <param name="request">The request message.</param>
 		public async void HandleRequest(PipeRequest request)
 		{
 			PipeResponse response = await this.HandleRequestAsync(request).ConfigureAwait(false);
-			await this.pipeStream.SendResponseAsync(response, CancellationToken.None).ConfigureAwait(false);
+			await this.pipeStreamWrapper.SendResponseAsync(response, CancellationToken.None).ConfigureAwait(false);
 		}
 
+		/// <summary>
+		/// Handles a request from a remote endpoint.
+		/// </summary>
+		/// <param name="request">The request.</param>
+		/// <returns>The response.</returns>
 		private async Task<PipeResponse> HandleRequestAsync(PipeRequest request)
 		{
-			if (this.handlerImplementation == null)
+			if (this.handlerFactoryFunc == null)
 			{
 				return PipeResponse.Failure(request.CallId, $"No handler implementation registered for interface '{typeof(THandling).FullName}' found.");
 			}
 
-			THandling handlerInstance = this.handlerImplementation();
+			THandling handlerInstance = this.handlerFactoryFunc();
 			if (handlerInstance == null)
 			{
 				return PipeResponse.Failure(request.CallId, $"Handler implementation returned null for interface '{typeof(THandling).FullName}'");
