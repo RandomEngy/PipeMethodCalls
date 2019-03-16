@@ -1,11 +1,24 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Authors>David Rickard</Authors>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <Description>Lightweight library for method calls over named pipes for IPC in .NET Core. Supports two-way communication with callbacks.</Description>
+    <PackageProjectUrl>https://github.com/RandomEngy/PipeMethodCalls</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/RandomEngy/PipeMethodCalls</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
   </ItemGroup>
 
 </Project>
