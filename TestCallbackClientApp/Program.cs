@@ -43,6 +43,16 @@ namespace TestCallbackClientApp
 					Console.WriteLine("Handled invoke exception:" + Environment.NewLine + exception);
 				}
 
+				try
+				{
+					int refValue = 4;
+					await pipeClientWithCallback.InvokeAsync(adder => adder.HasRefParam(ref refValue)).ConfigureAwait(false);
+				}
+				catch (PipeInvokeFailedException exception)
+				{
+					Console.WriteLine("Handled invoke exception:" + Environment.NewLine + exception);
+				}
+
 				await pipeClientWithCallback.WaitForRemotePipeCloseAsync();
 
 				Console.WriteLine("Server closed pipe.");

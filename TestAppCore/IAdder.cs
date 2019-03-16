@@ -16,5 +16,7 @@ namespace TestAppCore
 		IList<T> Listify<T>(T item);
 
 		void AlwaysFails();
+
+		void HasRefParam(ref int refParam);
 	}
 }

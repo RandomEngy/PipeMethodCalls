@@ -90,6 +90,8 @@ namespace PipeMethodCalls
 			this.invoker = new MethodInvoker<TRequesting>(wrappedPipeStream);
 			var requestHandler = new RequestHandler<THandling>(this.wrappedPipeStream, handlerFactoryFunc);
 
+			this.State = PipeState.Connected;
+
 			this.StartProcessing();
 		}
 

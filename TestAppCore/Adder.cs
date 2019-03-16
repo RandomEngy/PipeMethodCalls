@@ -31,5 +31,10 @@ namespace TestAppCore
 		{
 			throw new InvalidOperationException("This method always fails.");
 		}
+
+		public void HasRefParam(ref int refParam)
+		{
+			refParam = 5;
+		}
 	}
 }

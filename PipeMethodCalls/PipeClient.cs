@@ -82,6 +82,8 @@ namespace PipeMethodCalls
 			this.wrappedPipeStream = new PipeStreamWrapper(this.rawPipeStream, this.logger);
 			this.invoker = new MethodInvoker<TRequesting>(wrappedPipeStream);
 
+			this.State = PipeState.Connected;
+
 			this.StartProcessing();
 		}
 

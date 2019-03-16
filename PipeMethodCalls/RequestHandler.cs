@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading;
@@ -63,23 +64,28 @@ namespace PipeMethodCalls
 				return PipeResponse.Failure(request.CallId, $"Method '{request.MethodName}' not found in interface '{typeof(THandling).FullName}'.");
 			}
 
-			ParameterInfo[] paramInfos = method.GetParameters();
-			if (paramInfos.Length != request.Parameters.Length)
+			ParameterInfo[] paramInfoList = method.GetParameters();
+			if (paramInfoList.Length != request.Parameters.Length)
 			{
-				return PipeResponse.Failure(request.CallId, "Parameter mismatch.");
+				return PipeResponse.Failure(request.CallId, $"Parameter count mismatch for method '{request.MethodName}'.");
 			}
 
 			Type[] genericArguments = method.GetGenericArguments();
 			if (genericArguments.Length != request.GenericArguments.Length)
 			{
-				return PipeResponse.Failure(request.CallId, "Generic arguments mismatch.");
+				return PipeResponse.Failure(request.CallId, $"Generic argument count mismatch for method '{request.MethodName}'.");
 			}
 
-			object[] args = new object[paramInfos.Length];
+			if (paramInfoList.Any(info => info.IsOut || info.ParameterType.IsByRef))
+			{
+				return PipeResponse.Failure(request.CallId, $"ref parameters are not supported. Method: '{request.MethodName}'");
+			}
+
+			object[] args = new object[paramInfoList.Length];
 			for (int i = 0; i < args.Length; i++)
 			{
 				object origValue = request.Parameters[i];
-				Type destType = paramInfos[i].ParameterType;
+				Type destType = paramInfoList[i].ParameterType;
 				if (destType.IsGenericParameter)
 				{
 					destType = request.GenericArguments[destType.GenericParameterPosition];
@@ -91,7 +97,7 @@ namespace PipeMethodCalls
 				}
 				else
 				{
-					return PipeResponse.Failure(request.CallId, $"Cannot convert value of parameter '{paramInfos[i].Name}' ({origValue}) from {origValue.GetType().Name} to {destType.Name}.");
+					return PipeResponse.Failure(request.CallId, $"Cannot convert value of parameter '{paramInfoList[i].Name}' ({origValue}) from {origValue.GetType().Name} to {destType.Name}.");
 				}
 			}
 

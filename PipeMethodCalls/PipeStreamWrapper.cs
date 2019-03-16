@@ -161,7 +161,9 @@ namespace PipeMethodCalls
 					{
 						string message = "Pipe has closed.";
 						this.logger.Log(() => message);
-						throw new IOException(message);
+
+						// OperationCanceledException is handled as pipe closing gracefully.
+						throw new OperationCanceledException(message);
 					}
 
 					await memoryStream.WriteAsync(this.readBuffer, 0, readBytes, cancellationToken).ConfigureAwait(false);
