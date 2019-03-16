@@ -9,7 +9,7 @@ namespace PipeMethodCalls
 	/// A named pipe client.
 	/// </summary>
 	/// <typeparam name="TRequesting">The interface that the client will be invoking on the server.</typeparam>
-	public interface IPipeClient<TRequesting> : IPipeInvoker<TRequesting>
+	public interface IPipeClient<TRequesting> : IPipeInvokerHost<TRequesting>
 		where TRequesting : class
 	{
 		/// <summary>

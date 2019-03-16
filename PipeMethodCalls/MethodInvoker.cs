@@ -12,9 +12,11 @@ namespace PipeMethodCalls
 	/// Handles invoking methods over a remote pipe stream.
 	/// </summary>
 	/// <typeparam name="TRequesting">The request interface.</typeparam>
-	internal class MethodInvoker<TRequesting> : IResponseHandler
+	internal class MethodInvoker<TRequesting> : IResponseHandler, IPipeInvoker<TRequesting>
+		where TRequesting : class
 	{
 		private readonly PipeStreamWrapper pipeStreamWrapper;
+		private readonly PipeHost pipeHost;
 		private Dictionary<long, PendingCall> pendingCalls = new Dictionary<long, PendingCall>();
 		private long currentCall;
 
@@ -22,10 +24,12 @@ namespace PipeMethodCalls
 		/// Initializes a new instance of the <see cref="MethodInvoker" /> class.
 		/// </summary>
 		/// <param name="pipeStreamWrapper">The pipe stream wrapper to use for invocation and response handling.</param>
-		public MethodInvoker(PipeStreamWrapper pipeStreamWrapper)
+		public MethodInvoker(PipeStreamWrapper pipeStreamWrapper, PipeHost pipeHost)
 		{
 			this.pipeStreamWrapper = pipeStreamWrapper;
 			this.pipeStreamWrapper.ResponseHandler = this;
+
+			this.pipeHost = pipeHost;
 		}
 
 		/// <summary>
@@ -51,6 +55,8 @@ namespace PipeMethodCalls
 		{
 			// Sync, no result
 
+			Utilities.EnsureReadyForInvoke(this.pipeHost.State, this.pipeHost.PipeFault);
+
 			PipeResponse response = await this.GetResponseFromExpressionAsync(expression, cancellationToken);
 
 			if (!response.Succeeded)
@@ -67,6 +73,8 @@ namespace PipeMethodCalls
 		public async Task InvokeAsync(Expression<Func<TRequesting, Task>> expression, CancellationToken cancellationToken = default)
 		{
 			// Async, no result
+
+			Utilities.EnsureReadyForInvoke(this.pipeHost.State, this.pipeHost.PipeFault);
 
 			PipeResponse response = await this.GetResponseFromExpressionAsync(expression, cancellationToken);
 
@@ -86,6 +94,8 @@ namespace PipeMethodCalls
 		public async Task<TResult> InvokeAsync<TResult>(Expression<Func<TRequesting, TResult>> expression, CancellationToken cancellationToken = default)
 		{
 			// Sync with result
+
+			Utilities.EnsureReadyForInvoke(this.pipeHost.State, this.pipeHost.PipeFault);
 
 			PipeResponse response = await this.GetResponseFromExpressionAsync(expression, cancellationToken);
 
@@ -116,6 +126,8 @@ namespace PipeMethodCalls
 		public async Task<TResult> InvokeAsync<TResult>(Expression<Func<TRequesting, Task<TResult>>> expression, CancellationToken cancellationToken = default(CancellationToken))
 		{
 			// Async with result
+
+			Utilities.EnsureReadyForInvoke(this.pipeHost.State, this.pipeHost.PipeFault);
 
 			PipeResponse response = await this.GetResponseFromExpressionAsync(expression, cancellationToken);
 

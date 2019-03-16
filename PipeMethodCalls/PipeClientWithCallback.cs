@@ -25,13 +25,10 @@ namespace PipeMethodCalls
 		private readonly PipeOptions? options;
 		private readonly TokenImpersonationLevel? impersonationLevel;
 		private readonly HandleInheritability? inheritability;
-		private MethodInvoker<TRequesting> invoker;
 		private NamedPipeClientStream rawPipeStream;
 		private PipeStreamWrapper wrappedPipeStream;
-		private CancellationTokenSource workLoopCancellationTokenSource;
-		private TaskCompletionSource<object> pipeCloseCompletionSource;
 		private Action<string> logger;
-		private Exception pipeFault;
+		private PipeHost host = new PipeHost();
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="PipeClientWithCallback"/> class.
@@ -91,7 +88,13 @@ namespace PipeMethodCalls
 		/// <summary>
 		/// Gets the state of the pipe.
 		/// </summary>
-		public PipeState State { get; private set; } = PipeState.NotOpened;
+		public PipeState State => this.host.State;
+
+		/// <summary>
+		/// Gets the method invoker.
+		/// </summary>
+		/// <remarks>This is null before connecting.</remarks>
+		public IPipeInvoker<TRequesting> Invoker { get; private set; }
 
 		/// <summary>
 		/// Sets up the given action as a logger for the module.
@@ -130,12 +133,10 @@ namespace PipeMethodCalls
 			this.rawPipeStream.ReadMode = PipeTransmissionMode.Message;
 
 			this.wrappedPipeStream = new PipeStreamWrapper(this.rawPipeStream, this.logger);
-			this.invoker = new MethodInvoker<TRequesting>(wrappedPipeStream);
+			this.Invoker = new MethodInvoker<TRequesting>(this.wrappedPipeStream, this.host);
 			var requestHandler = new RequestHandler<THandling>(this.wrappedPipeStream, handlerFactoryFunc);
 
-			this.State = PipeState.Connected;
-
-			this.StartProcessing();
+			this.host.StartProcessing(wrappedPipeStream);
 		}
 
 		/// <summary>
@@ -146,115 +147,7 @@ namespace PipeMethodCalls
 		/// <remarks>This does not throw when the other end closes the pipe.</remarks>
 		public Task WaitForRemotePipeCloseAsync(CancellationToken cancellationToken = default)
 		{
-			if (this.State == PipeState.Closed)
-			{
-				return Task.CompletedTask;
-			}
-
-			if (this.State == PipeState.Faulted)
-			{
-				return Task.FromException(this.pipeFault);
-			}
-
-			if (this.pipeCloseCompletionSource == null)
-			{
-				this.pipeCloseCompletionSource = new TaskCompletionSource<object>();
-			}
-
-			cancellationToken.Register(() =>
-			{
-				this.pipeCloseCompletionSource.SetCanceled();
-			});
-
-			return this.pipeCloseCompletionSource.Task;
-		}
-
-		/// <summary>
-		/// Starts the processing loop on the pipe.
-		/// </summary>
-		private async void StartProcessing()
-		{
-			try
-			{
-				this.workLoopCancellationTokenSource = new CancellationTokenSource();
-
-				// Process messages until canceled.
-				while (true)
-				{
-					this.workLoopCancellationTokenSource.Token.ThrowIfCancellationRequested();
-					await this.wrappedPipeStream.ProcessMessageAsync(this.workLoopCancellationTokenSource.Token).ConfigureAwait(false);
-				}
-			}
-			catch (OperationCanceledException)
-			{
-				// This is a normal dispose.
-				this.State = PipeState.Closed;
-				if (this.pipeCloseCompletionSource != null)
-				{
-					this.pipeCloseCompletionSource.TrySetResult(null);
-				}
-			}
-			catch (Exception exception)
-			{
-				this.State = PipeState.Faulted;
-				this.pipeFault = exception;
-				if (this.pipeCloseCompletionSource != null)
-				{
-					this.pipeCloseCompletionSource.TrySetException(exception);
-				}
-			}
-		}
-
-		/// <summary>
-		/// Invokes a method on the remote endpoint.
-		/// </summary>
-		/// <param name="expression">The method to invoke.</param>
-		/// <param name="cancellationToken">A token to cancel the request.</param>
-		/// <exception cref="PipeInvokeFailedException">Thrown when the invoked method throws an exception.</exception>
-		public Task InvokeAsync(Expression<Action<TRequesting>> expression, CancellationToken cancellationToken = default)
-		{
-			Utilities.EnsureReadyForInvoke(this.State, this.pipeFault);
-			return this.invoker.InvokeAsync(expression, cancellationToken);
-		}
-
-		/// <summary>
-		/// Invokes a method on the remote endpoint.
-		/// </summary>
-		/// <param name="expression">The method to invoke.</param>
-		/// <param name="cancellationToken">A token to cancel the request.</param>
-		/// <exception cref="PipeInvokeFailedException">Thrown when the invoked method throws an exception.</exception>
-		public Task InvokeAsync(Expression<Func<TRequesting, Task>> expression, CancellationToken cancellationToken = default)
-		{
-			Utilities.EnsureReadyForInvoke(this.State, this.pipeFault);
-			return this.invoker.InvokeAsync(expression, cancellationToken);
-		}
-
-		/// <summary>
-		/// Invokes a method on the remote endpoint.
-		/// </summary>
-		/// <typeparam name="TResult">The type of result from the method.</typeparam>
-		/// <param name="expression">The method to invoke.</param>
-		/// <param name="cancellationToken">A token to cancel the request.</param>
-		/// <returns>The method result.</returns>
-		/// <exception cref="PipeInvokeFailedException">Thrown when the invoked method throws an exception.</exception>
-		public Task<TResult> InvokeAsync<TResult>(Expression<Func<TRequesting, TResult>> expression, CancellationToken cancellationToken = default)
-		{
-			Utilities.EnsureReadyForInvoke(this.State, this.pipeFault);
-			return this.invoker.InvokeAsync(expression, cancellationToken);
-		}
-
-		/// <summary>
-		/// Invokes a method on the remote endpoint.
-		/// </summary>
-		/// <typeparam name="TResult">The type of result from the method.</typeparam>
-		/// <param name="expression">The method to invoke.</param>
-		/// <param name="cancellationToken">A token to cancel the request.</param>
-		/// <returns>The method result.</returns>
-		/// <exception cref="PipeInvokeFailedException">Thrown when the invoked method throws an exception.</exception>
-		public Task<TResult> InvokeAsync<TResult>(Expression<Func<TRequesting, Task<TResult>>> expression, CancellationToken cancellationToken = default)
-		{
-			Utilities.EnsureReadyForInvoke(this.State, this.pipeFault);
-			return this.invoker.InvokeAsync(expression, cancellationToken);
+			return this.host.WaitForRemotePipeCloseAsync(cancellationToken);
 		}
 
 		#region IDisposable Support
@@ -266,8 +159,7 @@ namespace PipeMethodCalls
 			{
 				if (disposing)
 				{
-					this.workLoopCancellationTokenSource.Cancel();
-					this.invoker = null;
+					this.host.Dispose();
 
 					if (this.rawPipeStream != null)
 					{

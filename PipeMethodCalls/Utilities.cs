@@ -67,7 +67,6 @@ namespace PipeMethodCalls
 			{
 				// Rely on JSON.Net to convert complex type
 				targetValue = jObj.ToObject(targetType);
-				// TODO: handle error
 				return true;
 			}
 

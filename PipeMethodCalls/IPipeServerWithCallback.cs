@@ -9,7 +9,7 @@ namespace PipeMethodCalls
 	/// A named pipe server with a callback channel.
 	/// </summary>
 	/// <typeparam name="TRequesting">The callback channel interface that the client will be handling.</typeparam>
-	public interface IPipeServerWithCallback<TRequesting> : IPipeInvoker<TRequesting>
+	public interface IPipeServerWithCallback<TRequesting> : IPipeInvokerHost<TRequesting>
 		where TRequesting : class
 	{
 		/// <summary>

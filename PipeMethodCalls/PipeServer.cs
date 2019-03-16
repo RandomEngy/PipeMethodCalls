@@ -16,31 +16,28 @@ namespace PipeMethodCalls
 	{
 		private readonly string pipeName;
 		private readonly Func<THandling> handlerFactoryFunc;
-		private readonly PipeOptions? pipeOptions;
+		private readonly PipeOptions? options;
 		private NamedPipeServerStream rawPipeStream;
-		private PipeStreamWrapper wrappedPipeStream;
-		private CancellationTokenSource workLoopCancellationTokenSource;
-		private TaskCompletionSource<object> pipeCloseCompletionSource;
 		private Action<string> logger;
-		private Exception pipeFault;
+		private PipeHost host = new PipeHost();
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="PipeServer"/> class.
 		/// </summary>
 		/// <param name="pipeName">The pipe name.</param>
 		/// <param name="handlerFactoryFunc">A factory function to provide the handler implementation.</param>
-		/// <param name="pipeOptions">Extra options for the pipe.</param>
-		public PipeServer(string pipeName, Func<THandling> handlerFactoryFunc, PipeOptions? pipeOptions = null)
+		/// <param name="options">Extra options for the pipe.</param>
+		public PipeServer(string pipeName, Func<THandling> handlerFactoryFunc, PipeOptions? options = null)
 		{
 			this.pipeName = pipeName;
 			this.handlerFactoryFunc = handlerFactoryFunc;
-			this.pipeOptions = pipeOptions;
+			this.options = options;
 		}
 
 		/// <summary>
 		/// Gets the state of the pipe.
 		/// </summary>
-		public PipeState State { get; private set; } = PipeState.NotOpened;
+		public PipeState State => this.host.State;
 
 		/// <summary>
 		/// Sets up the given action as a logger for the module.
@@ -57,19 +54,14 @@ namespace PipeMethodCalls
 		/// <param name="cancellationToken">A token to cancel the request.</param>
 		public async Task WaitForConnectionAsync(CancellationToken cancellationToken = default)
 		{
-			if (this.State != PipeState.NotOpened)
-			{
-				throw new InvalidOperationException("Can only call WaitForConnectionAsync once");
-			}
-
 			PipeOptions pipeOptionsToPass;
-			if (this.pipeOptions == null)
+			if (this.options == null)
 			{
 				pipeOptionsToPass = PipeOptions.Asynchronous;
 			}
 			else
 			{
-				pipeOptionsToPass = this.pipeOptions.Value | PipeOptions.Asynchronous;
+				pipeOptionsToPass = this.options.Value | PipeOptions.Asynchronous;
 			}
 
 			this.rawPipeStream = new NamedPipeServerStream(this.pipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Message, pipeOptionsToPass);
@@ -81,12 +73,10 @@ namespace PipeMethodCalls
 
 			this.logger.Log(() => "Connected to client.");
 
-			this.wrappedPipeStream = new PipeStreamWrapper(this.rawPipeStream, this.logger);
-			var requestHandler = new RequestHandler<THandling>(this.wrappedPipeStream, this.handlerFactoryFunc);
+			var wrappedPipeStream = new PipeStreamWrapper(this.rawPipeStream, this.logger);
+			var requestHandler = new RequestHandler<THandling>(wrappedPipeStream, this.handlerFactoryFunc);
 
-			this.State = PipeState.Connected;
-
-			this.StartProcessing();
+			this.host.StartProcessing(wrappedPipeStream);
 		}
 
 		/// <summary>
@@ -97,63 +87,7 @@ namespace PipeMethodCalls
 		/// <remarks>This does not throw when the other end closes the pipe.</remarks>
 		public Task WaitForRemotePipeCloseAsync(CancellationToken cancellationToken = default)
 		{
-			if (this.State == PipeState.Closed)
-			{
-				return Task.CompletedTask;
-			}
-
-			if (this.State == PipeState.Faulted)
-			{
-				return Task.FromException(this.pipeFault);
-			}
-
-			if (this.pipeCloseCompletionSource == null)
-			{
-				this.pipeCloseCompletionSource = new TaskCompletionSource<object>();
-			}
-
-			cancellationToken.Register(() =>
-			{
-				this.pipeCloseCompletionSource.SetCanceled();
-			});
-
-			return this.pipeCloseCompletionSource.Task;
-		}
-
-		/// <summary>
-		/// Starts the processing loop on the pipe.
-		/// </summary>
-		private async void StartProcessing()
-		{
-			try
-			{
-				this.workLoopCancellationTokenSource = new CancellationTokenSource();
-
-				// Process messages until canceled.
-				while (true)
-				{
-					this.workLoopCancellationTokenSource.Token.ThrowIfCancellationRequested();
-					await this.wrappedPipeStream.ProcessMessageAsync(this.workLoopCancellationTokenSource.Token).ConfigureAwait(false);
-				}
-			}
-			catch (OperationCanceledException)
-			{
-				// This is a normal dispose.
-				this.State = PipeState.Closed;
-				if (this.pipeCloseCompletionSource != null)
-				{
-					this.pipeCloseCompletionSource.TrySetResult(null);
-				}
-			}
-			catch (Exception exception)
-			{
-				this.State = PipeState.Faulted;
-				this.pipeFault = exception;
-				if (this.pipeCloseCompletionSource != null)
-				{
-					this.pipeCloseCompletionSource.TrySetException(exception);
-				}
-			}
+			return this.host.WaitForRemotePipeCloseAsync(cancellationToken);
 		}
 
 		#region IDisposable Support
@@ -165,7 +99,7 @@ namespace PipeMethodCalls
 			{
 				if (disposing)
 				{
-					this.workLoopCancellationTokenSource.Cancel();
+					this.host.Dispose();
 
 					if (this.rawPipeStream != null)
 					{
