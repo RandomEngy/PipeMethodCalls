@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace PipeMethodCalls
 {
-	public class PipeServerWithCallback<TRequesting, THandling> : IDisposable
+	public class PipeServerWithCallback<TRequesting, THandling> : IDisposable, IPipeServerWithCallback<TRequesting>
 	{
 		private readonly string name;
 		private readonly Func<THandling> handlerFactoryFunc;

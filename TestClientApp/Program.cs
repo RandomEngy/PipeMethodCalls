@@ -3,11 +3,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using TestAppCore;
 
-namespace TestNetClientApp
+namespace TestClientApp
 {
 	class Program
 	{
@@ -19,7 +18,7 @@ namespace TestNetClientApp
 
 		private static async Task RunClientAsync()
 		{
-			var pipeClientWithCallback = new PipeClientWithCallback<IAdder, IConcatenator>("testpipe", () => new Concatenator());
+			var pipeClientWithCallback = new PipeClient<IAdder>("testpipe");
 			pipeClientWithCallback.SetLogger(message => Console.WriteLine(message));
 
 			await pipeClientWithCallback.ConnectAsync().ConfigureAwait(false);

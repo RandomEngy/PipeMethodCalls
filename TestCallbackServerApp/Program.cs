@@ -7,7 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using TestAppCore;
 
-namespace TestNetServerApp
+namespace TestCallbackServerApp
 {
 	class Program
 	{
@@ -24,6 +24,9 @@ namespace TestNetServerApp
 			pipeServerWithCallback.SetLogger(message => Console.WriteLine(message));
 
 			await pipeServerWithCallback.WaitForConnectionAsync();
+
+			string concatResult = await pipeServerWithCallback.InvokeAsync(c => c.Concatenate("a", "b"));
+			Console.WriteLine("Concatenate result: " + concatResult);
 
 			await pipeServerWithCallback.WaitForRemotePipeCloseAsync();
 

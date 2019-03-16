@@ -4,10 +4,10 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{7AD9E040-1D5B-43BB-A067-30C876662232}</ProjectGuid>
+    <ProjectGuid>{46E21C58-74BA-46B4-B952-5D3243753C08}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>TestNetClientApp</RootNamespace>
-    <AssemblyName>TestNetClientApp</AssemblyName>
+    <RootNamespace>TestServerApp</RootNamespace>
+    <AssemblyName>TestServerApp</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
