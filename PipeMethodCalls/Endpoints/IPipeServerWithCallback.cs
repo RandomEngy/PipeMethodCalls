@@ -9,25 +9,8 @@ namespace PipeMethodCalls
 	/// A named pipe server with a callback channel.
 	/// </summary>
 	/// <typeparam name="TRequesting">The callback channel interface that the client will be handling.</typeparam>
-	public interface IPipeServerWithCallback<TRequesting> : IPipeInvokerHost<TRequesting>
+	public interface IPipeServerWithCallback<TRequesting> : IPipeServer, IPipeInvokerHost<TRequesting>
 		where TRequesting : class
 	{
-		/// <summary>
-		/// Sets up the given action as a logger for the module.
-		/// </summary>
-		/// <param name="logger">The logger action.</param>
-		void SetLogger(Action<string> logger);
-
-		/// <summary>
-		/// Waits for a client to connect to the pipe.
-		/// </summary>
-		/// <param name="cancellationToken">A token to cancel the request.</param>
-		Task WaitForConnectionAsync(CancellationToken cancellationToken = default);
-
-		/// <summary>
-		/// Waits for the client to close the pipe.
-		/// </summary>
-		/// <param name="cancellationToken">A token to cancel the request.</param>
-		Task WaitForRemotePipeCloseAsync(CancellationToken cancellationToken = default);
 	}
 }

@@ -25,7 +25,7 @@ namespace PipeMethodCalls
 		private NamedPipeClientStream rawPipeStream;
 		private PipeStreamWrapper wrappedPipeStream;
 		private Action<string> logger;
-		private PipeHost host = new PipeHost();
+		private PipeMessageProcessor messageProcessor = new PipeMessageProcessor();
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="PipeClient"/> class.
@@ -79,7 +79,7 @@ namespace PipeMethodCalls
 		/// <summary>
 		/// Gets the state of the pipe.
 		/// </summary>
-		public PipeState State => this.host.State;
+		public PipeState State => this.messageProcessor.State;
 
 		/// <summary>
 		/// Gets the method invoker.
@@ -124,9 +124,9 @@ namespace PipeMethodCalls
 			this.rawPipeStream.ReadMode = PipeTransmissionMode.Message;
 
 			this.wrappedPipeStream = new PipeStreamWrapper(this.rawPipeStream, this.logger);
-			this.Invoker = new MethodInvoker<TRequesting>(this.wrappedPipeStream, this.host);
+			this.Invoker = new MethodInvoker<TRequesting>(this.wrappedPipeStream, this.messageProcessor);
 
-			this.host.StartProcessing(wrappedPipeStream);
+			this.messageProcessor.StartProcessing(wrappedPipeStream);
 		}
 
 		/// <summary>
@@ -137,7 +137,7 @@ namespace PipeMethodCalls
 		/// <remarks>This does not throw when the other end closes the pipe.</remarks>
 		public Task WaitForRemotePipeCloseAsync(CancellationToken cancellationToken = default)
 		{
-			return this.host.WaitForRemotePipeCloseAsync(cancellationToken);
+			return this.messageProcessor.WaitForRemotePipeCloseAsync(cancellationToken);
 		}
 
 		#region IDisposable Support
@@ -149,7 +149,7 @@ namespace PipeMethodCalls
 			{
 				if (disposing)
 				{
-					this.host.Dispose();
+					this.messageProcessor.Dispose();
 
 					if (this.rawPipeStream != null)
 					{

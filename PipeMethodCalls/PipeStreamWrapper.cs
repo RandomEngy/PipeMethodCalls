@@ -17,7 +17,10 @@ namespace PipeMethodCalls
 		private readonly byte[] readBuffer = new byte[1024];
 		private readonly PipeStream stream;
 		private readonly Action<string> logger;
-		private readonly JsonSerializerSettings serializerSettings;
+		private static readonly JsonSerializerSettings serializerSettings = new JsonSerializerSettings
+		{
+			NullValueHandling = NullValueHandling.Ignore
+		};
 
 		// Prevents more than one thread from writing to the pipe stream at once
 		private readonly SemaphoreSlim writeLock = new SemaphoreSlim(1, 1);
@@ -31,7 +34,6 @@ namespace PipeMethodCalls
 		{
 			this.stream = stream;
 			this.logger = logger;
-			this.serializerSettings = new JsonSerializerSettings();
 		}
 
 		/// <summary>
@@ -72,7 +74,7 @@ namespace PipeMethodCalls
 		/// <param name="cancellationToken">A token to cancel the operation.</param>
 		private async Task SendMessageAsync(MessageType messageType, object payloadObject, CancellationToken cancellationToken)
 		{
-			string payloadJson = JsonConvert.SerializeObject(payloadObject);
+			string payloadJson = JsonConvert.SerializeObject(payloadObject, serializerSettings);
 			this.logger.Log(() => $"Sending {messageType} message" + Environment.NewLine + payloadJson);
 			byte[] payloadBytes = Encoding.UTF8.GetBytes(payloadJson);
 
@@ -106,7 +108,7 @@ namespace PipeMethodCalls
 			{
 				case MessageType.Request:
 					this.logger.Log(() => "Handling request" + Environment.NewLine + json);
-					PipeRequest request = JsonConvert.DeserializeObject<PipeRequest>(json, this.serializerSettings);
+					PipeRequest request = JsonConvert.DeserializeObject<PipeRequest>(json, serializerSettings);
 
 					if (this.RequestHandler == null)
 					{
@@ -117,7 +119,7 @@ namespace PipeMethodCalls
 					break;
 				case MessageType.Response:
 					this.logger.Log(() => "Handling response" + Environment.NewLine + json);
-					PipeResponse response = JsonConvert.DeserializeObject<PipeResponse>(json, this.serializerSettings);
+					PipeResponse response = JsonConvert.DeserializeObject<PipeResponse>(json, serializerSettings);
 
 					if (this.ResponseHandler == null)
 					{

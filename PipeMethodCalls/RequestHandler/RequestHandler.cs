@@ -36,8 +36,15 @@ namespace PipeMethodCalls
 		/// <param name="request">The request message.</param>
 		public async void HandleRequest(PipeRequest request)
 		{
-			PipeResponse response = await this.HandleRequestAsync(request).ConfigureAwait(false);
-			await this.pipeStreamWrapper.SendResponseAsync(response, CancellationToken.None).ConfigureAwait(false);
+			try
+			{
+				PipeResponse response = await this.HandleRequestAsync(request).ConfigureAwait(false);
+				await this.pipeStreamWrapper.SendResponseAsync(response, CancellationToken.None).ConfigureAwait(false);
+			}
+			catch (Exception)
+			{
+				// If the pipe has closed and can't hear the response, we can't let the other end know about it, so we just eat the exception.
+			}
 		}
 
 		/// <summary>

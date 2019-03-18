@@ -7,7 +7,7 @@ namespace PipeMethodCalls
 	/// <summary>
 	/// A named pipe server.
 	/// </summary>
-	public interface IPipeServer
+	public interface IPipeServer : IDisposable
 	{
 		/// <summary>
 		/// Sets up the given action as a logger for the module.

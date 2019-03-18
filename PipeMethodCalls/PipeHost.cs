@@ -9,7 +9,7 @@ namespace PipeMethodCalls
 	/// <summary>
 	/// Handles the pipe connection state and work processing.
 	/// </summary>
-	internal sealed class PipeHost : IDisposable
+	internal sealed class PipeMessageProcessor : IDisposable
 	{
 		private TaskCompletionSource<object> pipeCloseCompletionSource;
 		private CancellationTokenSource workLoopCancellationTokenSource;
@@ -108,7 +108,10 @@ namespace PipeMethodCalls
 		{
 			if (!disposed)
 			{
-				this.workLoopCancellationTokenSource.Cancel();
+				if (this.workLoopCancellationTokenSource != null)
+				{
+					this.workLoopCancellationTokenSource.Cancel();
+				}
 
 				disposed = true;
 			}

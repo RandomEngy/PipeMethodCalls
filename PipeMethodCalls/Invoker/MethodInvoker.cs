@@ -16,7 +16,7 @@ namespace PipeMethodCalls
 		where TRequesting : class
 	{
 		private readonly PipeStreamWrapper pipeStreamWrapper;
-		private readonly PipeHost pipeHost;
+		private readonly PipeMessageProcessor pipeHost;
 		private Dictionary<long, PendingCall> pendingCalls = new Dictionary<long, PendingCall>();
 		private long currentCall;
 
@@ -24,7 +24,7 @@ namespace PipeMethodCalls
 		/// Initializes a new instance of the <see cref="MethodInvoker" /> class.
 		/// </summary>
 		/// <param name="pipeStreamWrapper">The pipe stream wrapper to use for invocation and response handling.</param>
-		public MethodInvoker(PipeStreamWrapper pipeStreamWrapper, PipeHost pipeHost)
+		public MethodInvoker(PipeStreamWrapper pipeStreamWrapper, PipeMessageProcessor pipeHost)
 		{
 			this.pipeStreamWrapper = pipeStreamWrapper;
 			this.pipeStreamWrapper.ResponseHandler = this;
