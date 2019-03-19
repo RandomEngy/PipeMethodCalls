@@ -25,6 +25,7 @@ namespace TestServerApp
 			try
 			{
 				await pipeServerWithCallback.WaitForConnectionAsync();
+
 				await pipeServerWithCallback.WaitForRemotePipeCloseAsync();
 
 				Console.WriteLine("Client disconnected.");

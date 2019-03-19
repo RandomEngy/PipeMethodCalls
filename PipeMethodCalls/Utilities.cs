@@ -105,15 +105,15 @@ namespace PipeMethodCalls
 		{
 			if (state == PipeState.NotOpened)
 			{
-				throw new PipeInvokeFailedException("Can only invoke methods after connecting the pipe.");
+				throw new IOException("Can only invoke methods after connecting the pipe.");
 			}
 			else if (state == PipeState.Closed)
 			{
-				throw new PipeInvokeFailedException("Cannot invoke methods after the pipe has closed.");
+				throw new IOException("Cannot invoke methods after the pipe has closed.");
 			}
 			else if (state == PipeState.Faulted)
 			{
-				throw new PipeInvokeFailedException("Cannot invoke method. Pipe has faulted.", pipeFault);
+				throw new IOException("Cannot invoke method. Pipe has faulted.", pipeFault);
 			}
 		}
 	}

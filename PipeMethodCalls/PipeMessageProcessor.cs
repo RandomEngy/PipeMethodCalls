@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -62,6 +63,11 @@ namespace PipeMethodCalls
 				this.PipeFault = exception;
 				if (this.pipeCloseCompletionSource != null)
 				{
+					if (!(exception is IOException))
+					{
+						exception = new IOException("Pipe closed with error", exception);
+					}
+
 					this.pipeCloseCompletionSource.TrySetException(exception);
 				}
 			}
@@ -71,7 +77,7 @@ namespace PipeMethodCalls
 		/// Wait for the other end to close the pipe.
 		/// </summary>
 		/// <param name="cancellationToken">A token to cancel the operation.</param>
-		/// <exception cref="PipeFaultedException">Thrown when the pipe has closed due to an unknown error.</exception>
+		/// <exception cref="IOException">Thrown when the pipe has closed due to an unknown error.</exception>
 		/// <remarks>This does not throw when the other end closes the pipe.</remarks>
 		public Task WaitForRemotePipeCloseAsync(CancellationToken cancellationToken = default)
 		{

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
@@ -51,6 +52,9 @@ namespace PipeMethodCalls
 		/// </summary>
 		/// <param name="expression">The method to invoke.</param>
 		/// <param name="cancellationToken">A token to cancel the request.</param>
+		/// <exception cref="PipeInvokeFailedException">Thrown when the invoked method throws an exception.</exception>
+		/// <exception cref="IOException">Thrown when there is an issue with the pipe communication.</exception>
+		/// <exception cref="OperationCanceledException">Thrown when the cancellation token is invoked.</exception>
 		public async Task InvokeAsync(Expression<Action<TRequesting>> expression, CancellationToken cancellationToken = default)
 		{
 			// Sync, no result
@@ -70,6 +74,9 @@ namespace PipeMethodCalls
 		/// </summary>
 		/// <param name="expression">The method to invoke.</param>
 		/// <param name="cancellationToken">A token to cancel the request.</param>
+		/// <exception cref="PipeInvokeFailedException">Thrown when the invoked method throws an exception.</exception>
+		/// <exception cref="IOException">Thrown when there is an issue with the pipe communication.</exception>
+		/// <exception cref="OperationCanceledException">Thrown when the cancellation token is invoked.</exception>
 		public async Task InvokeAsync(Expression<Func<TRequesting, Task>> expression, CancellationToken cancellationToken = default)
 		{
 			// Async, no result
@@ -91,6 +98,9 @@ namespace PipeMethodCalls
 		/// <param name="expression">The method to invoke.</param>
 		/// <param name="cancellationToken">A token to cancel the request.</param>
 		/// <returns>The method result.</returns>
+		/// <exception cref="PipeInvokeFailedException">Thrown when the invoked method throws an exception.</exception>
+		/// <exception cref="IOException">Thrown when there is an issue with the pipe communication.</exception>
+		/// <exception cref="OperationCanceledException">Thrown when the cancellation token is invoked.</exception>
 		public async Task<TResult> InvokeAsync<TResult>(Expression<Func<TRequesting, TResult>> expression, CancellationToken cancellationToken = default)
 		{
 			// Sync with result
@@ -123,7 +133,10 @@ namespace PipeMethodCalls
 		/// <param name="expression">The method to invoke.</param>
 		/// <param name="cancellationToken">A token to cancel the request.</param>
 		/// <returns>The method result.</returns>
-		public async Task<TResult> InvokeAsync<TResult>(Expression<Func<TRequesting, Task<TResult>>> expression, CancellationToken cancellationToken = default(CancellationToken))
+		/// <exception cref="PipeInvokeFailedException">Thrown when the invoked method throws an exception.</exception>
+		/// <exception cref="IOException">Thrown when there is an issue with the pipe communication.</exception>
+		/// <exception cref="OperationCanceledException">Thrown when the cancellation token is invoked.</exception>
+		public async Task<TResult> InvokeAsync<TResult>(Expression<Func<TRequesting, Task<TResult>>> expression, CancellationToken cancellationToken = default)
 		{
 			// Async with result
 
