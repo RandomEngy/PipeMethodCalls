@@ -116,7 +116,7 @@ namespace PipeMethodCalls
 				throw new InvalidOperationException("Can only call ConnectAsync once");
 			}
 
-			this.logger.Log(() => $"Connecting to named pipe '{this.pipeName}' on machine {this.serverName}...");
+			this.logger.Log(() => $"Connecting to named pipe '{this.pipeName}' on machine '{this.serverName}'");
 
 			if (this.options != null)
 			{
