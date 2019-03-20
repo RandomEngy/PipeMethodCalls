@@ -40,5 +40,6 @@ This library uses named pipes to invoke method calls on a remote endpoint. The m
 * CancellationToken support
 
 ### Not supported
-* out and ref parameters
+* Methods with out and ref parameters
 * Properties
+* Method overloads
