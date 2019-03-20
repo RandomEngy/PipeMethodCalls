@@ -36,6 +36,7 @@ This library uses named pipes to invoke method calls on a remote endpoint. The m
 * 39KB with Newtonsoft JSON as only dependency
 * Invoking async methods
 * Passing and returning complex types via JSON serialization
+* Interleaved or multiple simultaneous calls
 * Throwing exceptions
 * CancellationToken support
 
