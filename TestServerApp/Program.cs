@@ -19,14 +19,14 @@ namespace TestServerApp
 
 		private static async Task RunServerAsync()
 		{
-			var pipeServerWithCallback = new PipeServer<IAdder>("testpipe", () => new Adder());
-			pipeServerWithCallback.SetLogger(message => Console.WriteLine(message));
+			var pipeServer = new PipeServer<IAdder>("mypipe", () => new Adder());
+			pipeServer.SetLogger(message => Console.WriteLine(message));
 
 			try
 			{
-				await pipeServerWithCallback.WaitForConnectionAsync();
+				await pipeServer.WaitForConnectionAsync();
 
-				await pipeServerWithCallback.WaitForRemotePipeCloseAsync();
+				await pipeServer.WaitForRemotePipeCloseAsync();
 
 				Console.WriteLine("Client disconnected.");
 			}

@@ -61,7 +61,7 @@ namespace PipeMethodCalls
 
 			Utilities.EnsureReadyForInvoke(this.pipeHost.State, this.pipeHost.PipeFault);
 
-			PipeResponse response = await this.GetResponseFromExpressionAsync(expression, cancellationToken);
+			PipeResponse response = await this.GetResponseFromExpressionAsync(expression, cancellationToken).ConfigureAwait(false);
 
 			if (!response.Succeeded)
 			{
@@ -83,7 +83,7 @@ namespace PipeMethodCalls
 
 			Utilities.EnsureReadyForInvoke(this.pipeHost.State, this.pipeHost.PipeFault);
 
-			PipeResponse response = await this.GetResponseFromExpressionAsync(expression, cancellationToken);
+			PipeResponse response = await this.GetResponseFromExpressionAsync(expression, cancellationToken).ConfigureAwait(false);
 
 			if (!response.Succeeded)
 			{
@@ -107,7 +107,7 @@ namespace PipeMethodCalls
 
 			Utilities.EnsureReadyForInvoke(this.pipeHost.State, this.pipeHost.PipeFault);
 
-			PipeResponse response = await this.GetResponseFromExpressionAsync(expression, cancellationToken);
+			PipeResponse response = await this.GetResponseFromExpressionAsync(expression, cancellationToken).ConfigureAwait(false);
 
 			if (response.Succeeded)
 			{
@@ -142,7 +142,7 @@ namespace PipeMethodCalls
 
 			Utilities.EnsureReadyForInvoke(this.pipeHost.State, this.pipeHost.PipeFault);
 
-			PipeResponse response = await this.GetResponseFromExpressionAsync(expression, cancellationToken);
+			PipeResponse response = await this.GetResponseFromExpressionAsync(expression, cancellationToken).ConfigureAwait(false);
 
 			if (response.Succeeded)
 			{

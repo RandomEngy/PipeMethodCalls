@@ -18,17 +18,17 @@ namespace TestClientApp
 
 		private static async Task RunClientAsync()
 		{
-			var pipeClientWithCallback = new PipeClient<IAdder>("testpipe");
-			pipeClientWithCallback.SetLogger(message => Console.WriteLine(message));
+			var pipeClient = new PipeClient<IAdder>("mypipe");
+			pipeClient.SetLogger(message => Console.WriteLine(message));
 
 			try
 			{
-				await pipeClientWithCallback.ConnectAsync().ConfigureAwait(false);
-				WrappedInt result = await pipeClientWithCallback.InvokeAsync(adder => adder.AddWrappedNumbers(new WrappedInt { Num = 1 }, new WrappedInt { Num = 3 })).ConfigureAwait(false);
+				await pipeClient.ConnectAsync().ConfigureAwait(false);
+				WrappedInt result = await pipeClient.InvokeAsync(adder => adder.AddWrappedNumbers(new WrappedInt { Num = 1 }, new WrappedInt { Num = 3 })).ConfigureAwait(false);
 
 				Console.WriteLine("Server add result: " + result.Num);
 
-				await pipeClientWithCallback.WaitForRemotePipeCloseAsync();
+				await pipeClient.WaitForRemotePipeCloseAsync();
 
 				Console.WriteLine("Server closed pipe.");
 			}
