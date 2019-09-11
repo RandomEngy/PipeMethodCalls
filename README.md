@@ -17,7 +17,7 @@ int result = await pipeClient.InvokeAsync(a => a.AddNumbers(1, 3));
 ### Calls both way
 
 ```csharp
-var pipeServer = new PipeServerWithCallback<IConcatenator, IAdder>("testpipe", () => new Adder());
+var pipeServer = new PipeServerWithCallback<IConcatenator, IAdder>("mypipe", () => new Adder());
 await pipeServer.WaitForConnectionAsync();
 string concatResult = await pipeServer.InvokeAsync(c => c.Concatenate("a", "b"));
 ```
