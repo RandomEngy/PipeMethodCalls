@@ -9,6 +9,7 @@
     <PackageProjectUrl>https://github.com/RandomEngy/PipeMethodCalls</PackageProjectUrl>
     <RepositoryUrl>https://github.com/RandomEngy/PipeMethodCalls</RepositoryUrl>
     <PackageIconUrl>https://github.com/RandomEngy/PipeMethodCalls/raw/master/Icon_64x64.png</PackageIconUrl>
+    <Version>1.0.1</Version>
   </PropertyGroup>
 
   <ItemGroup>
