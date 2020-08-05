@@ -66,8 +66,7 @@ namespace PipeMethodCalls
 				pipeOptionsToPass = this.options.Value | PipeOptions.Asynchronous;
 			}
 
-			this.rawPipeStream = new NamedPipeServerStream(this.pipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Message, pipeOptionsToPass);
-			this.rawPipeStream.ReadMode = PipeTransmissionMode.Message;
+			this.rawPipeStream = new NamedPipeServerStream(this.pipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Byte, pipeOptionsToPass);
 
 			this.logger.Log(() => $"Set up named pipe server '{this.pipeName}'.");
 

@@ -131,8 +131,6 @@ namespace PipeMethodCalls
 			await this.rawPipeStream.ConnectAsync(cancellationToken).ConfigureAwait(false);
 			this.logger.Log(() => "Connected.");
 
-			this.rawPipeStream.ReadMode = PipeTransmissionMode.Message;
-
 			this.wrappedPipeStream = new PipeStreamWrapper(this.rawPipeStream, this.logger);
 			this.Invoker = new MethodInvoker<TRequesting>(this.wrappedPipeStream, this.messageProcessor);
 			var requestHandler = new RequestHandler<THandling>(this.wrappedPipeStream, handlerFactoryFunc);

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Pipes;
+using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -80,9 +81,16 @@ namespace PipeMethodCalls
 
 			int payloadLength = payloadBytes.Length;
 
-			byte[] messageBytes = new byte[payloadLength + 1];
+			// First byte is the message type
+			byte[] messageBytes = new byte[payloadLength + 5];
 			messageBytes[0] = (byte)messageType;
-			payloadBytes.CopyTo(messageBytes, 1);
+
+			// Next 4 bytes is the payload length
+			byte[] payloadLengthBytes = BitConverter.GetBytes(IPAddress.HostToNetworkOrder(payloadLength));
+			payloadLengthBytes.CopyTo(messageBytes, 1);
+
+			// Rest is the payload
+			payloadBytes.CopyTo(messageBytes, 5);
 
 			await this.writeLock.WaitAsync(cancellationToken).ConfigureAwait(false);
 			try
@@ -140,25 +148,22 @@ namespace PipeMethodCalls
 		/// <returns>The read message type and payload.</returns>
 		private async Task<(MessageType messageType, string jsonPayload)> ReadMessageAsync(CancellationToken cancellationToken)
 		{
-			byte[] message = await this.ReadRawMessageAsync(cancellationToken).ConfigureAwait(false);
-			var messageType = (MessageType)message[0];
-			string jsonPayload = Encoding.UTF8.GetString(message, 1, message.Length - 1);
+			// Read the 5-byte header to see the message type and how long the message is
+			await this.stream.ReadAsync(this.readBuffer, 0, 5).ConfigureAwait(false);
 
-			return (messageType, jsonPayload);
-		}
+			var messageType = (MessageType)this.readBuffer[0];
+			int payloadLength = IPAddress.NetworkToHostOrder(BitConverter.ToInt32(this.readBuffer, 1));
 
-		/// <summary>
-		/// Reads the raw message from the input stream.
-		/// </summary>
-		/// <param name="cancellationToken"></param>
-		/// <returns></returns>
-		private async Task<byte[]> ReadRawMessageAsync(CancellationToken cancellationToken)
-		{
+			byte[] payloadBytes = new byte[payloadLength];
+
+			int payloadBytesRead = 0;
 			using (var memoryStream = new MemoryStream())
 			{
-				do
+				while (payloadBytesRead < payloadLength)
 				{
-					var readBytes = await this.stream.ReadAsync(this.readBuffer, 0, this.readBuffer.Length, cancellationToken).ConfigureAwait(false);
+					int maxBytesToRead = Math.Min(this.readBuffer.Length, payloadLength - payloadBytesRead);
+
+					var readBytes = await this.stream.ReadAsync(this.readBuffer, 0, maxBytesToRead, cancellationToken).ConfigureAwait(false);
 					if (readBytes == 0)
 					{
 						string message = "Pipe has closed.";
@@ -169,11 +174,15 @@ namespace PipeMethodCalls
 					}
 
 					await memoryStream.WriteAsync(this.readBuffer, 0, readBytes, cancellationToken).ConfigureAwait(false);
+					payloadBytesRead += readBytes;
 				}
-				while (!this.stream.IsMessageComplete);
 
-				return memoryStream.ToArray();
+				payloadBytes = memoryStream.ToArray();
 			}
+
+			string jsonPayload = Encoding.UTF8.GetString(payloadBytes);
+
+			return (messageType, jsonPayload);
 		}
 	}
 }
