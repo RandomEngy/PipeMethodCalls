@@ -15,7 +15,9 @@ namespace PipeMethodCalls
 	/// </summary>
 	internal class PipeStreamWrapper
 	{
-		private readonly byte[] headerReadBuffer = new byte[5];
+		private const int MessageHeaderLengthBytes = 5;
+
+		private readonly byte[] headerReadBuffer = new byte[MessageHeaderLengthBytes];
 		private readonly PipeStream stream;
 		private readonly Action<string> logger;
 		private static readonly JsonSerializerSettings serializerSettings = new JsonSerializerSettings
@@ -82,7 +84,7 @@ namespace PipeMethodCalls
 			int payloadLength = payloadBytes.Length;
 
 			// First byte is the message type
-			byte[] messageBytes = new byte[payloadLength + 5];
+			byte[] messageBytes = new byte[payloadLength + MessageHeaderLengthBytes];
 			messageBytes[0] = (byte)messageType;
 
 			// Next 4 bytes is the payload length
@@ -90,7 +92,7 @@ namespace PipeMethodCalls
 			payloadLengthBytes.CopyTo(messageBytes, 1);
 
 			// Rest is the payload
-			payloadBytes.CopyTo(messageBytes, 5);
+			payloadBytes.CopyTo(messageBytes, MessageHeaderLengthBytes);
 
 			await this.writeLock.WaitAsync(cancellationToken).ConfigureAwait(false);
 			try
@@ -149,7 +151,12 @@ namespace PipeMethodCalls
 		private async Task<(MessageType messageType, string jsonPayload)> ReadMessageAsync(CancellationToken cancellationToken)
 		{
 			// Read the 5-byte header to see the message type and how long the message is
-			await this.stream.ReadAsync(this.headerReadBuffer, 0, 5).ConfigureAwait(false);
+			int headerBytesRead = 0;
+			while (headerBytesRead < MessageHeaderLengthBytes)
+			{
+				int readBytes = await this.stream.ReadAsync(this.headerReadBuffer, headerBytesRead, MessageHeaderLengthBytes - headerBytesRead).ConfigureAwait(false);
+				headerBytesRead += readBytes;
+			}
 
 			var messageType = (MessageType)this.headerReadBuffer[0];
 			int payloadLength = IPAddress.NetworkToHostOrder(BitConverter.ToInt32(this.headerReadBuffer, 1));
@@ -159,7 +166,7 @@ namespace PipeMethodCalls
 			int payloadBytesRead = 0;
 			while (payloadBytesRead < payloadLength)
 			{
-				var readBytes = await this.stream.ReadAsync(payloadBytes, payloadBytesRead, payloadLength - payloadBytesRead, cancellationToken).ConfigureAwait(false);
+				int readBytes = await this.stream.ReadAsync(payloadBytes, payloadBytesRead, payloadLength - payloadBytesRead, cancellationToken).ConfigureAwait(false);
 				if (readBytes == 0)
 				{
 					string message = "Pipe has closed.";
