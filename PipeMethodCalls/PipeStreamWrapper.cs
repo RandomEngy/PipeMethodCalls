@@ -15,7 +15,7 @@ namespace PipeMethodCalls
 	/// </summary>
 	internal class PipeStreamWrapper
 	{
-		private readonly byte[] readBuffer = new byte[1024];
+		private readonly byte[] headerReadBuffer = new byte[5];
 		private readonly PipeStream stream;
 		private readonly Action<string> logger;
 		private static readonly JsonSerializerSettings serializerSettings = new JsonSerializerSettings
@@ -149,35 +149,27 @@ namespace PipeMethodCalls
 		private async Task<(MessageType messageType, string jsonPayload)> ReadMessageAsync(CancellationToken cancellationToken)
 		{
 			// Read the 5-byte header to see the message type and how long the message is
-			await this.stream.ReadAsync(this.readBuffer, 0, 5).ConfigureAwait(false);
+			await this.stream.ReadAsync(this.headerReadBuffer, 0, 5).ConfigureAwait(false);
 
-			var messageType = (MessageType)this.readBuffer[0];
-			int payloadLength = IPAddress.NetworkToHostOrder(BitConverter.ToInt32(this.readBuffer, 1));
+			var messageType = (MessageType)this.headerReadBuffer[0];
+			int payloadLength = IPAddress.NetworkToHostOrder(BitConverter.ToInt32(this.headerReadBuffer, 1));
 
 			byte[] payloadBytes = new byte[payloadLength];
 
 			int payloadBytesRead = 0;
-			using (var memoryStream = new MemoryStream())
+			while (payloadBytesRead < payloadLength)
 			{
-				while (payloadBytesRead < payloadLength)
+				var readBytes = await this.stream.ReadAsync(payloadBytes, payloadBytesRead, payloadLength - payloadBytesRead, cancellationToken).ConfigureAwait(false);
+				if (readBytes == 0)
 				{
-					int maxBytesToRead = Math.Min(this.readBuffer.Length, payloadLength - payloadBytesRead);
+					string message = "Pipe has closed.";
+					this.logger.Log(() => message);
 
-					var readBytes = await this.stream.ReadAsync(this.readBuffer, 0, maxBytesToRead, cancellationToken).ConfigureAwait(false);
-					if (readBytes == 0)
-					{
-						string message = "Pipe has closed.";
-						this.logger.Log(() => message);
-
-						// OperationCanceledException is handled as pipe closing gracefully.
-						throw new OperationCanceledException(message);
-					}
-
-					await memoryStream.WriteAsync(this.readBuffer, 0, readBytes, cancellationToken).ConfigureAwait(false);
-					payloadBytesRead += readBytes;
+					// OperationCanceledException is handled as pipe closing gracefully.
+					throw new OperationCanceledException(message);
 				}
 
-				payloadBytes = memoryStream.ToArray();
+				payloadBytesRead += readBytes;
 			}
 
 			string jsonPayload = Encoding.UTF8.GetString(payloadBytes);
