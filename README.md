@@ -39,6 +39,7 @@ This library uses named pipes to invoke method calls on a remote endpoint. The m
 * Interleaved or multiple simultaneous calls
 * Throwing exceptions
 * CancellationToken support
+* Works on Windows, Linux and MacOS
 
 ### Not supported
 * Methods with out and ref parameters
