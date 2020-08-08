@@ -44,3 +44,6 @@ This library uses named pipes to invoke method calls on a remote endpoint. The m
 * Methods with out and ref parameters
 * Properties
 * Method overloads
+
+### Improvements
+Let me know if you have any interest in supporting alternate serializers like System.Text.Json, Utf8Json or MessagePack.
