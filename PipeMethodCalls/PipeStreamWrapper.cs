@@ -155,6 +155,11 @@ namespace PipeMethodCalls
 			while (headerBytesRead < MessageHeaderLengthBytes)
 			{
 				int readBytes = await this.stream.ReadAsync(this.headerReadBuffer, headerBytesRead, MessageHeaderLengthBytes - headerBytesRead).ConfigureAwait(false);
+				if (readBytes == 0)
+				{
+					this.ClosePipe();
+				}
+
 				headerBytesRead += readBytes;
 			}
 
@@ -169,11 +174,7 @@ namespace PipeMethodCalls
 				int readBytes = await this.stream.ReadAsync(payloadBytes, payloadBytesRead, payloadLength - payloadBytesRead, cancellationToken).ConfigureAwait(false);
 				if (readBytes == 0)
 				{
-					string message = "Pipe has closed.";
-					this.logger.Log(() => message);
-
-					// OperationCanceledException is handled as pipe closing gracefully.
-					throw new OperationCanceledException(message);
+					this.ClosePipe();
 				}
 
 				payloadBytesRead += readBytes;
@@ -182,6 +183,18 @@ namespace PipeMethodCalls
 			string jsonPayload = Encoding.UTF8.GetString(payloadBytes);
 
 			return (messageType, jsonPayload);
+		}
+
+		/// <summary>
+		/// Logs that the pipe has closed and throws exception to triggure graceful closure.
+		/// </summary>
+		private void ClosePipe()
+		{
+			string message = "Pipe has closed.";
+			this.logger.Log(() => message);
+
+			// OperationCanceledException is handled as pipe closing gracefully.
+			throw new OperationCanceledException(message);
 		}
 	}
 }
