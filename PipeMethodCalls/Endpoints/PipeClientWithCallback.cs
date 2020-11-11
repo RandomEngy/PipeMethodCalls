@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.IO.Pipes;
-using System.Linq.Expressions;
 using System.Security.Principal;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -84,6 +81,22 @@ namespace PipeMethodCalls
 			this.impersonationLevel = impersonationLevel;
 			this.inheritability = inheritability;
 		}
+		
+		/// <summary>
+		/// Get the raw named pipe. This will automatically create if it hasn't been instantiated yet and is accessed.
+		/// </summary>
+		public NamedPipeClientStream PipeInstance
+		{
+			get
+			{
+				if (this.rawPipeStream == null)
+				{
+					CreatePipe();
+				}
+
+				return this.rawPipeStream;
+			}
+		}
 
 		/// <summary>
 		/// Gets the state of the pipe.
@@ -119,13 +132,9 @@ namespace PipeMethodCalls
 
 			this.logger.Log(() => $"Connecting to named pipe '{this.pipeName}' on machine '{this.serverName}'");
 
-			if (this.options != null)
+			if (this.rawPipeStream == null)
 			{
-				this.rawPipeStream = new NamedPipeClientStream(this.serverName, this.pipeName, PipeDirection.InOut, this.options.Value | PipeOptions.Asynchronous, this.impersonationLevel.Value, this.inheritability.Value);
-			}
-			else
-			{
-				this.rawPipeStream = new NamedPipeClientStream(this.serverName, this.pipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
+				CreatePipe();	
 			}
 
 			await this.rawPipeStream.ConnectAsync(cancellationToken).ConfigureAwait(false);
@@ -147,6 +156,23 @@ namespace PipeMethodCalls
 		public Task WaitForRemotePipeCloseAsync(CancellationToken cancellationToken = default)
 		{
 			return this.messageProcessor.WaitForRemotePipeCloseAsync(cancellationToken);
+		}
+		
+		/// <summary>
+		/// Initialize new named pipe stream with preset options respected
+		/// </summary>
+		private void CreatePipe()
+		{
+			if (this.options != null)
+			{
+				this.rawPipeStream = new NamedPipeClientStream(this.serverName, this.pipeName, PipeDirection.InOut,
+					this.options.Value | PipeOptions.Asynchronous, this.impersonationLevel.Value, this.inheritability.Value);
+			}
+			else
+			{
+				this.rawPipeStream = new NamedPipeClientStream(this.serverName, this.pipeName, PipeDirection.InOut,
+					PipeOptions.Asynchronous);
+			}
 		}
 
 		#region IDisposable Support
