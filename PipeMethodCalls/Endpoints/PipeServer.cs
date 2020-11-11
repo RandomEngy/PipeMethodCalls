@@ -21,7 +21,7 @@ namespace PipeMethodCalls
 		private PipeMessageProcessor messageProcessor = new PipeMessageProcessor();
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="PipeServer"/> class.
+		/// Initializes a new instance of the <see cref="PipeServer{THandling}"/> class.
 		/// </summary>
 		/// <param name="pipeName">The pipe name.</param>
 		/// <param name="handlerFactoryFunc">A factory function to provide the handler implementation.</param>
@@ -31,6 +31,17 @@ namespace PipeMethodCalls
 			this.pipeName = pipeName;
 			this.handlerFactoryFunc = handlerFactoryFunc;
 			this.options = options;
+		}
+		
+		/// <summary>
+		/// Initializes a new instance of the <see cref="PipeServer{THandling}"/> class.
+		/// </summary>
+		/// <param name="existingPipe">Instance of a named pipe to upgrade.</param>
+		/// <param name="handlerFactoryFunc">A factory function to provide the handler implementation.</param>
+		public PipeServer(NamedPipeServerStream existingPipe, Func<THandling> handlerFactoryFunc)
+		{
+			this.rawPipeStream = existingPipe;
+			this.handlerFactoryFunc = handlerFactoryFunc;
 		}
 		
 		/// <summary>

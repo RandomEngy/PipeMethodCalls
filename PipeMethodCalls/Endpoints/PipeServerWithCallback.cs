@@ -23,7 +23,7 @@ namespace PipeMethodCalls
 		private PipeMessageProcessor messageProcessor = new PipeMessageProcessor();
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="PipeServerWithCallback"/> class.
+		/// Initializes a new instance of the <see cref="PipeServerWithCallback{TRequesting,THandling}"/> class.
 		/// </summary>
 		/// <param name="pipeName">The pipe name.</param>
 		/// <param name="handlerFactoryFunc">A factory function to provide the handler implementation.</param>
@@ -35,6 +35,17 @@ namespace PipeMethodCalls
 			this.options = options;
 		}
 		
+		/// <summary>
+		/// Initializes a new instance of the <see cref="PipeServerWithCallback{TRequesting,THandling}"/> class.
+		/// </summary>
+		/// <param name="existingPipe">Instance of a named pipe to upgrade.</param>
+		/// <param name="handlerFactoryFunc">A factory function to provide the handler implementation.</param>
+		public PipeServerWithCallback(NamedPipeServerStream existingPipe, Func<THandling> handlerFactoryFunc)
+		{
+			this.rawPipeStream = existingPipe;
+			this.handlerFactoryFunc = handlerFactoryFunc;
+		}
+
 		/// <summary>
 		/// Get the raw named pipe. This will automatically create if it hasn't been instantiated yet and is accessed.
 		/// </summary>
