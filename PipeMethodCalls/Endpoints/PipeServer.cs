@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.IO.Pipes;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -34,6 +32,22 @@ namespace PipeMethodCalls
 			this.handlerFactoryFunc = handlerFactoryFunc;
 			this.options = options;
 		}
+		
+		/// <summary>
+		/// Get the raw named pipe. This will automatically create if it hasn't been instantiated yet and is accessed.
+		/// </summary>
+		public NamedPipeServerStream RawPipe
+		{
+			get
+			{
+				if (this.rawPipeStream == null)
+				{
+					this.CreatePipe();
+				}
+
+				return this.rawPipeStream;
+			}
+		}
 
 		/// <summary>
 		/// Gets the state of the pipe.
@@ -56,19 +70,10 @@ namespace PipeMethodCalls
 		/// <exception cref="IOException">Thrown when the connection fails.</exception>
 		public async Task WaitForConnectionAsync(CancellationToken cancellationToken = default)
 		{
-			PipeOptions pipeOptionsToPass;
-			if (this.options == null)
+			if (this.rawPipeStream == null)
 			{
-				pipeOptionsToPass = PipeOptions.Asynchronous;
+				this.CreatePipe();	
 			}
-			else
-			{
-				pipeOptionsToPass = this.options.Value | PipeOptions.Asynchronous;
-			}
-
-			this.rawPipeStream = new NamedPipeServerStream(this.pipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Byte, pipeOptionsToPass);
-
-			this.logger.Log(() => $"Set up named pipe server '{this.pipeName}'.");
 
 			await this.rawPipeStream.WaitForConnectionAsync(cancellationToken).ConfigureAwait(false);
 
@@ -89,6 +94,27 @@ namespace PipeMethodCalls
 		public Task WaitForRemotePipeCloseAsync(CancellationToken cancellationToken = default)
 		{
 			return this.messageProcessor.WaitForRemotePipeCloseAsync(cancellationToken);
+		}
+
+		/// <summary>
+		/// Initialize new named pipe stream with preset options respected
+		/// </summary>
+		private void CreatePipe()
+		{
+			PipeOptions pipeOptionsToPass;
+			if (this.options == null)
+			{
+				pipeOptionsToPass = PipeOptions.Asynchronous;
+			}
+			else
+			{
+				pipeOptionsToPass = this.options.Value | PipeOptions.Asynchronous;
+			}
+
+			this.rawPipeStream = new NamedPipeServerStream(this.pipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Byte,
+				pipeOptionsToPass);
+
+			this.logger.Log(() => $"Set up named pipe server '{this.pipeName}'.");
 		}
 
 		#region IDisposable Support
