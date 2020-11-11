@@ -38,13 +38,13 @@ namespace PipeMethodCalls
 		/// <summary>
 		/// Get the raw named pipe. This will automatically create if it hasn't been instantiated yet and is accessed.
 		/// </summary>
-		public NamedPipeServerStream PipeInstance
+		public NamedPipeServerStream RawPipe
 		{
 			get
 			{
 				if (this.rawPipeStream == null)
 				{
-					CreatePipe();
+					this.CreatePipe();
 				}
 
 				return this.rawPipeStream;
@@ -80,7 +80,7 @@ namespace PipeMethodCalls
 		{
 			if (this.rawPipeStream == null)
 			{
-				CreatePipe();	
+				this.CreatePipe();	
 			}
 
 			await this.rawPipeStream.WaitForConnectionAsync(cancellationToken).ConfigureAwait(false);
