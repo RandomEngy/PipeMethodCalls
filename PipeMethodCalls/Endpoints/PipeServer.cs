@@ -32,16 +32,24 @@ namespace PipeMethodCalls
 			this.handlerFactoryFunc = handlerFactoryFunc;
 			this.options = options;
 		}
-		
+
 		/// <summary>
 		/// Initializes a new instance of the <see cref="PipeServer{THandling}"/> class.
 		/// </summary>
 		/// <param name="rawPipe">Raw pipe stream to wrap with method call capability.</param>
 		/// <param name="handlerFactoryFunc">A factory function to provide the handler implementation.</param>
+		/// <exception cref="ArgumentException">Provided pipe cannot be wrapped. Provided pipe must be setup with the following: PipeDirection - <see cref="PipeDirection.InOut"/>,  PipeTransmissionMode - <see cref="PipeTransmissionMode.Byte"/>, and PipeOptions - <see cref="PipeOptions.Asynchronous"/></exception>
 		public PipeServer(NamedPipeServerStream rawPipe, Func<THandling> handlerFactoryFunc)
 		{
-			this.rawPipeStream = rawPipe;
-			this.handlerFactoryFunc = handlerFactoryFunc;
+			if (rawPipe.CanRead && rawPipe.CanWrite && rawPipe.IsAsync && rawPipe.TransmissionMode == PipeTransmissionMode.Byte)
+			{
+				this.rawPipeStream = rawPipe;
+				this.handlerFactoryFunc = handlerFactoryFunc;
+			}
+			else
+			{
+				throw new ArgumentException("Provided pipe cannot be wrapped.  Pipe needs to be setup with the following: PipeDirection.InOut, PipeTransmissionMode.Byte, and PipeOptions.Asynchronous");
+			}
 		}
 		
 		/// <summary>
