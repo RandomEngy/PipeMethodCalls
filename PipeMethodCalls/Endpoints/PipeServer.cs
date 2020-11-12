@@ -36,11 +36,11 @@ namespace PipeMethodCalls
 		/// <summary>
 		/// Initializes a new instance of the <see cref="PipeServer{THandling}"/> class.
 		/// </summary>
-		/// <param name="existingPipe">Instance of a named pipe to upgrade.</param>
+		/// <param name="rawPipe">Raw pipe stream to wrap with method call capability.</param>
 		/// <param name="handlerFactoryFunc">A factory function to provide the handler implementation.</param>
-		public PipeServer(NamedPipeServerStream existingPipe, Func<THandling> handlerFactoryFunc)
+		public PipeServer(NamedPipeServerStream rawPipe, Func<THandling> handlerFactoryFunc)
 		{
-			this.rawPipeStream = existingPipe;
+			this.rawPipeStream = rawPipe;
 			this.handlerFactoryFunc = handlerFactoryFunc;
 		}
 		
