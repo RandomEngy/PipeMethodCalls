@@ -38,18 +38,12 @@ namespace PipeMethodCalls
 		/// </summary>
 		/// <param name="rawPipe">Raw pipe stream to wrap with method call capability.</param>
 		/// <param name="handlerFactoryFunc">A factory function to provide the handler implementation.</param>
-		/// <exception cref="ArgumentException">Provided pipe cannot be wrapped. Provided pipe must be setup with the following: PipeDirection - <see cref="PipeDirection.InOut"/>,  PipeTransmissionMode - <see cref="PipeTransmissionMode.Byte"/>, and PipeOptions - <see cref="PipeOptions.Asynchronous"/></exception>
+		/// <exception cref="ArgumentException">Provided pipe cannot be wrapped. Provided pipe must be setup with the following: PipeDirection - <see cref="PipeDirection.InOut"/>, PipeOptions - <see cref="PipeOptions.Asynchronous"/>, and PipeTransmissionMode - <see cref="PipeTransmissionMode.Byte"/></exception>
 		public PipeServer(NamedPipeServerStream rawPipe, Func<THandling> handlerFactoryFunc)
 		{
-			if (rawPipe.CanRead && rawPipe.CanWrite && rawPipe.IsAsync && rawPipe.TransmissionMode == PipeTransmissionMode.Byte)
-			{
-				this.rawPipeStream = rawPipe;
-				this.handlerFactoryFunc = handlerFactoryFunc;
-			}
-			else
-			{
-				throw new ArgumentException("Provided pipe cannot be wrapped.  Pipe needs to be setup with the following: PipeDirection.InOut, PipeTransmissionMode.Byte, and PipeOptions.Asynchronous");
-			}
+			if (!Utilities.ValidateRawPipe(rawPipe)) throw ExceptionBuilder.InvalidRawPipeException();
+
+			this.rawPipeStream = rawPipe;
 		}
 		
 		/// <summary>
