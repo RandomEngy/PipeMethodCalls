@@ -19,6 +19,10 @@ namespace PipeMethodCalls
 		private readonly PipeStreamWrapper pipeStreamWrapper;
 		private readonly PipeMessageProcessor pipeHost;
 		private Dictionary<long, PendingCall> pendingCalls = new Dictionary<long, PendingCall>();
+
+		// Lock object for accessing pending calls dictionary.
+		private object pendingCallsLock = new object();
+
 		private long currentCall;
 
 		/// <summary>
@@ -39,11 +43,22 @@ namespace PipeMethodCalls
 		/// <param name="response">The response message to handle.</param>
 		public void HandleResponse(PipeResponse response)
 		{
-			if (!this.pendingCalls.TryGetValue(response.CallId, out PendingCall pendingCall))
+			PendingCall pendingCall = null;
+
+			lock (this.pendingCallsLock)
 			{
-				throw new InvalidOperationException($"No pending call found for ID {response.CallId}");
+				if (this.pendingCalls.TryGetValue(response.CallId, out pendingCall))
+				{
+					// Call has completed. Remove from pending list.
+					this.pendingCalls.Remove(response.CallId);
+				}
+				else
+				{
+					throw new InvalidOperationException($"No pending call found for ID {response.CallId}");
+				}
 			}
 
+			// Mark method call task as completed.
 			pendingCall.TaskCompletionSource.TrySetResult(response);
 		}
 
@@ -180,7 +195,7 @@ namespace PipeMethodCalls
 		/// <returns>The request to send over the pipe to execute that expression.</returns>
 		private PipeRequest CreateRequest(Expression expression)
 		{
-			this.currentCall++;
+			long callId = Interlocked.Increment(ref this.currentCall);
 
 			if (!(expression is LambdaExpression lamdaExp))
 			{
@@ -194,7 +209,7 @@ namespace PipeMethodCalls
 
 			return new PipeRequest
 			{
-				CallId = this.currentCall,
+				CallId = callId,
 				MethodName = methodCallExp.Method.Name,
 				GenericArguments = methodCallExp.Method.GetGenericArguments(),
 				Parameters = methodCallExp.Arguments.Select(argumentExpression => Expression.Lambda(argumentExpression).Compile().DynamicInvoke()).ToArray()
@@ -210,7 +225,11 @@ namespace PipeMethodCalls
 		private async Task<PipeResponse> GetResponseAsync(PipeRequest request, CancellationToken cancellationToken)
 		{
 			var pendingCall = new PendingCall();
-			this.pendingCalls.Add(request.CallId, pendingCall);
+
+			lock (this.pendingCallsLock)
+			{
+				this.pendingCalls.Add(request.CallId, pendingCall);
+			}
 
 			await this.pipeStreamWrapper.SendRequestAsync(request, cancellationToken).ConfigureAwait(false);
 
