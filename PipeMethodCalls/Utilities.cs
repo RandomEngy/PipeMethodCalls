@@ -116,5 +116,19 @@ namespace PipeMethodCalls
 				throw new IOException("Cannot invoke method. Pipe has faulted.", pipeFault);
 			}
 		}
+		
+		/// <summary>
+		/// Ensures the provided raw pipe is compatible with method call functionality.
+		/// </summary>
+		/// <param name="rawPipe">Raw pipe stream to test for compatibility with method call capability.</param>
+		public static bool ValidateRawPipe(PipeStream rawPipe)
+		{
+			// Values relied on are the following:
+			// • PipeDirection.InOut (CanRead + CanWrite)
+			// • PipeOptions.Asynchronous
+			// • PipeTransmissionMode.Byte
+			
+			return rawPipe.CanRead && rawPipe.CanWrite && rawPipe.IsAsync && rawPipe.TransmissionMode == PipeTransmissionMode.Byte;
+		}
 	}
 }
