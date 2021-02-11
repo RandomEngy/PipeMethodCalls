@@ -21,7 +21,7 @@ namespace PipeMethodCalls
 		private PipeMessageProcessor messageProcessor = new PipeMessageProcessor();
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="PipeServer"/> class.
+		/// Initializes a new instance of the <see cref="PipeServer{THandling}"/> class.
 		/// </summary>
 		/// <param name="pipeName">The pipe name.</param>
 		/// <param name="handlerFactoryFunc">A factory function to provide the handler implementation.</param>
@@ -31,6 +31,19 @@ namespace PipeMethodCalls
 			this.pipeName = pipeName;
 			this.handlerFactoryFunc = handlerFactoryFunc;
 			this.options = options;
+		}
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="PipeServer{THandling}"/> class.
+		/// </summary>
+		/// <param name="rawPipe">Raw pipe stream to wrap with method call capability.</param>
+		/// <param name="handlerFactoryFunc">A factory function to provide the handler implementation.</param>
+		/// <exception cref="ArgumentException">Provided pipe cannot be wrapped. Provided pipe must be setup with the following: PipeDirection - <see cref="PipeDirection.InOut"/>, PipeOptions - <see cref="PipeOptions.Asynchronous"/>, and PipeTransmissionMode - <see cref="PipeTransmissionMode.Byte"/></exception>
+		public PipeServer(NamedPipeServerStream rawPipe, Func<THandling> handlerFactoryFunc)
+		{
+			Utilities.ValidateRawPipe(rawPipe);
+
+			this.rawPipeStream = rawPipe;
 		}
 		
 		/// <summary>
