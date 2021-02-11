@@ -43,7 +43,7 @@ namespace PipeMethodCalls
 		/// <exception cref="ArgumentException">Provided pipe cannot be wrapped. Provided pipe must be setup with the following: PipeDirection - <see cref="PipeDirection.InOut"/>, PipeOptions - <see cref="PipeOptions.Asynchronous"/>, and PipeTransmissionMode - <see cref="PipeTransmissionMode.Byte"/></exception>
 		public PipeServerWithCallback(NamedPipeServerStream rawPipe, Func<THandling> handlerFactoryFunc)
 		{
-			if (!Utilities.ValidateRawPipe(rawPipe)) throw ExceptionBuilder.InvalidRawPipeException();
+			Utilities.ValidateRawPipe(rawPipe);
 
 			this.rawPipeStream = rawPipe;
 		}

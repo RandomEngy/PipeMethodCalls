@@ -121,14 +121,18 @@ namespace PipeMethodCalls
 		/// Ensures the provided raw pipe is compatible with method call functionality.
 		/// </summary>
 		/// <param name="rawPipe">Raw pipe stream to test for compatibility with method call capability.</param>
-		public static bool ValidateRawPipe(PipeStream rawPipe)
+		/// <exception cref="ArgumentException">Throws is <see cref="PipeStream"/> is not compatible.</exception>
+		public static void ValidateRawPipe(PipeStream rawPipe)
 		{
 			// Values relied on are the following:
 			// • PipeDirection.InOut (CanRead + CanWrite)
 			// • PipeOptions.Asynchronous
 			// • PipeTransmissionMode.Byte
 			
-			return rawPipe.CanRead && rawPipe.CanWrite && rawPipe.IsAsync && rawPipe.TransmissionMode == PipeTransmissionMode.Byte;
+			if (!rawPipe.CanRead || !rawPipe.CanWrite || !rawPipe.IsAsync || rawPipe.TransmissionMode != PipeTransmissionMode.Byte)
+			{
+				throw new ArgumentException("Provided pipe cannot be wrapped. Pipe needs to be setup with the following: PipeDirection.InOut, PipeOptions.Asynchronous, and PipeTransmissionMode.Byte", nameof(rawPipe));
+			}
 		}
 	}
 }
