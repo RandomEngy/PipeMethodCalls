@@ -1,6 +1,7 @@
 ﻿using PipeMethodCalls;
 using System;
 using System.Collections.Generic;
+using System.IO.Pipes;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -19,7 +20,10 @@ namespace TestCallbackClientApp
 
 		private static async Task RunClientAsync()
 		{
-			var pipeClientWithCallback = new PipeClientWithCallback<IAdder, IConcatenator>("testpipe", () => new Concatenator());
+			var rawStream = new NamedPipeClientStream(".", "testpipe", PipeDirection.InOut, PipeOptions.Asynchronous);
+			var pipeClientWithCallback = new PipeClientWithCallback<IAdder, IConcatenator>(rawStream, () => new Concatenator());
+
+			//var pipeClientWithCallback = new PipeClientWithCallback<IAdder, IConcatenator>("testpipe", () => new Concatenator());
 			pipeClientWithCallback.SetLogger(message => Console.WriteLine(message));
 
 			try

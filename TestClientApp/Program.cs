@@ -1,6 +1,7 @@
 ﻿using PipeMethodCalls;
 using System;
 using System.Collections.Generic;
+using System.IO.Pipes;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -18,7 +19,10 @@ namespace TestClientApp
 
 		private static async Task RunClientAsync()
 		{
-			var pipeClient = new PipeClient<IAdder>("mypipe");
+			var rawPipeStream = new NamedPipeClientStream(".", "mypipe", PipeDirection.InOut, PipeOptions.Asynchronous);
+			var pipeClient = new PipeClient<IAdder>(rawPipeStream);
+
+			//var pipeClient = new PipeClient<IAdder>("mypipe");
 			pipeClient.SetLogger(message => Console.WriteLine(message));
 
 			try

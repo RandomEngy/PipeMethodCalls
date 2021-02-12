@@ -41,11 +41,12 @@ namespace PipeMethodCalls
 		/// <exception cref="ArgumentException">Provided pipe cannot be wrapped. Provided pipe must be setup with the following: PipeDirection - <see cref="PipeDirection.InOut"/>, PipeOptions - <see cref="PipeOptions.Asynchronous"/>, and PipeTransmissionMode - <see cref="PipeTransmissionMode.Byte"/></exception>
 		public PipeServer(NamedPipeServerStream rawPipe, Func<THandling> handlerFactoryFunc)
 		{
-			Utilities.ValidateRawPipe(rawPipe);
+			Utilities.ValidateRawServerPipe(rawPipe);
 
 			this.rawPipeStream = rawPipe;
+			this.handlerFactoryFunc = handlerFactoryFunc;
 		}
-		
+
 		/// <summary>
 		/// Get the raw named pipe. This will automatically create if it hasn't been instantiated yet and is accessed.
 		/// </summary>
@@ -124,7 +125,11 @@ namespace PipeMethodCalls
 				pipeOptionsToPass = this.options.Value | PipeOptions.Asynchronous;
 			}
 
-			this.rawPipeStream = new NamedPipeServerStream(this.pipeName, PipeDirection.InOut, 1, PipeTransmissionMode.Byte,
+			this.rawPipeStream = new NamedPipeServerStream(
+				this.pipeName,
+				PipeDirection.InOut,
+				1,
+				PipeTransmissionMode.Byte,
 				pipeOptionsToPass);
 
 			this.logger.Log(() => $"Set up named pipe server '{this.pipeName}'.");

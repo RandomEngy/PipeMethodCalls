@@ -90,9 +90,10 @@ namespace PipeMethodCalls
 		/// <exception cref="ArgumentException">Provided pipe cannot be wrapped. Provided pipe must be setup with the following: PipeDirection - <see cref="PipeDirection.InOut"/>, PipeOptions - <see cref="PipeOptions.Asynchronous"/>, and PipeTransmissionMode - <see cref="PipeTransmissionMode.Byte"/></exception>
 		public PipeClientWithCallback(NamedPipeClientStream rawPipe, Func<THandling> handlerFactoryFunc)
 		{
-			Utilities.ValidateRawPipe(rawPipe);
+			Utilities.ValidateRawClientPipe(rawPipe);
 
 			this.rawPipeStream = rawPipe;
+			this.handlerFactoryFunc = handlerFactoryFunc;
 		}
 		
 		/// <summary>
@@ -143,7 +144,14 @@ namespace PipeMethodCalls
 				throw new InvalidOperationException("Can only call ConnectAsync once");
 			}
 
-			this.logger.Log(() => $"Connecting to named pipe '{this.pipeName}' on machine '{this.serverName}'");
+			if (this.pipeName != null)
+			{
+				this.logger.Log(() => $"Connecting to named pipe '{this.pipeName}' on machine '{this.serverName}'");
+			}
+			else
+			{
+				this.logger.Log(() => $"Connecting to named pipe");
+			}
 
 			if (this.rawPipeStream == null)
 			{
@@ -178,13 +186,17 @@ namespace PipeMethodCalls
 		{
 			if (this.options != null)
 			{
-				this.rawPipeStream = new NamedPipeClientStream(this.serverName, this.pipeName, PipeDirection.InOut,
-					this.options.Value | PipeOptions.Asynchronous, this.impersonationLevel.Value, this.inheritability.Value);
+				this.rawPipeStream = new NamedPipeClientStream(
+					this.serverName,
+					this.pipeName,
+					PipeDirection.InOut,
+					this.options.Value | PipeOptions.Asynchronous,
+					this.impersonationLevel.Value,
+					this.inheritability.Value);
 			}
 			else
 			{
-				this.rawPipeStream = new NamedPipeClientStream(this.serverName, this.pipeName, PipeDirection.InOut,
-					PipeOptions.Asynchronous);
+				this.rawPipeStream = new NamedPipeClientStream(this.serverName, this.pipeName, PipeDirection.InOut,	PipeOptions.Asynchronous);
 			}
 		}
 

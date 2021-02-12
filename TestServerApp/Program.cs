@@ -1,6 +1,7 @@
 ﻿using PipeMethodCalls;
 using System;
 using System.Collections.Generic;
+using System.IO.Pipes;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -19,7 +20,10 @@ namespace TestServerApp
 
 		private static async Task RunServerAsync()
 		{
-			var pipeServer = new PipeServer<IAdder>("mypipe", () => new Adder());
+			var rawPipeStream = new NamedPipeServerStream("mypipe", PipeDirection.InOut, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
+			var pipeServer = new PipeServer<IAdder>(rawPipeStream, () => new Adder());
+
+			//var pipeServer = new PipeServer<IAdder>("mypipe", () => new Adder());
 			pipeServer.SetLogger(message => Console.WriteLine(message));
 
 			try
