@@ -72,12 +72,12 @@ namespace PipeMethodCalls
 			this.impersonationLevel = impersonationLevel;
 			this.inheritability = inheritability;
 		}
-		
+
 		/// <summary>
 		/// Initializes a new instance of the <see cref="PipeClient{TRequesting}"/> class.
 		/// </summary>
-		/// <param name="rawPipe">Raw pipe stream to wrap with method call capability.</param>
-		/// <exception cref="ArgumentException">Provided pipe cannot be wrapped. Provided pipe must be setup with the following: PipeDirection - <see cref="PipeDirection.InOut"/>, PipeOptions - <see cref="PipeOptions.Asynchronous"/>, and PipeTransmissionMode - <see cref="PipeTransmissionMode.Byte"/></exception>
+		/// <param name="rawPipe">Raw pipe stream to wrap with method call capability. Must be set up with PipeDirection - <see cref="PipeDirection.InOut"/> and PipeOptions - <see cref="PipeOptions.Asynchronous"/></param>
+		/// <exception cref="ArgumentException">Provided pipe cannot be wrapped. Provided pipe must be setup with the following: PipeDirection - <see cref="PipeDirection.InOut"/> and PipeOptions - <see cref="PipeOptions.Asynchronous"/></exception>
 		public PipeClient(NamedPipeClientStream rawPipe)
 		{
 			Utilities.ValidateRawClientPipe(rawPipe);

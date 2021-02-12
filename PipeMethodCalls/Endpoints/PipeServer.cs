@@ -36,7 +36,7 @@ namespace PipeMethodCalls
 		/// <summary>
 		/// Initializes a new instance of the <see cref="PipeServer{THandling}"/> class.
 		/// </summary>
-		/// <param name="rawPipe">Raw pipe stream to wrap with method call capability.</param>
+		/// <param name="rawPipe">Raw pipe stream to wrap with method call capability. Must be set up with PipeDirection - <see cref="PipeDirection.InOut"/>, PipeOptions - <see cref="PipeOptions.Asynchronous"/>, and PipeTransmissionMode - <see cref="PipeTransmissionMode.Byte"/></param>
 		/// <param name="handlerFactoryFunc">A factory function to provide the handler implementation.</param>
 		/// <exception cref="ArgumentException">Provided pipe cannot be wrapped. Provided pipe must be setup with the following: PipeDirection - <see cref="PipeDirection.InOut"/>, PipeOptions - <see cref="PipeOptions.Asynchronous"/>, and PipeTransmissionMode - <see cref="PipeTransmissionMode.Byte"/></exception>
 		public PipeServer(NamedPipeServerStream rawPipe, Func<THandling> handlerFactoryFunc)
