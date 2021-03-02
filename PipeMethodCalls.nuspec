@@ -4,9 +4,9 @@
     <id>PipeMethodCalls</id>
     <version>$version$</version>
     <authors>Coveo Connectors Team</authors>
-    <owners>The PipeMethodCalls library.</owners>
+    <owners>RandomEngy</owners>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <description>Contains the PipeMethodCalls library.</description>
+    <description>Lightweight library for method calls over named pipes for IPC in .NET Core. Supports two-way communication with callbacks.</description>
     <copyright>Copyright (c), The PipeMethodCalls library authors.</copyright>
     <dependencies>
       <group targetFramework="netstandard2.1" />
