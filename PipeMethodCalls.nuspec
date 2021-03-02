@@ -9,7 +9,7 @@
     <description>Lightweight library for method calls over named pipes for IPC in .NET Core. Supports two-way communication with callbacks.</description>
     <copyright>Copyright (c), The PipeMethodCalls library authors.</copyright>
     <dependencies>
-      <group targetFramework="netstandard2.1" />
+      <group targetFramework="netstandard2.0" />
     </dependencies>
   </metadata>
 </package>
