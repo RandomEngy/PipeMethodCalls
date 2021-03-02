@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>PipeMethodCalls</id>
+    <version>$version$</version>
+    <authors>Coveo Connectors Team</authors>
+    <owners>The PipeMethodCalls library.</owners>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Contains the PipeMethodCalls library.</description>
+    <copyright>Copyright (c), The PipeMethodCalls library authors.</copyright>
+    <dependencies>
+      <group targetFramework="netstandard2.1" />
+    </dependencies>
+  </metadata>
+</package>
