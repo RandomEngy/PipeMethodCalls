@@ -70,6 +70,7 @@ pipeline {
             steps {
                 script {
                     bat "nuget pack PipeMethodCalls.nuspec -properties version=${completeVersion}"
+                    bat "nuget push *.nupkg"
                 }
                 echo "The nuget package for PipeMethodCalls has been published."
             }
