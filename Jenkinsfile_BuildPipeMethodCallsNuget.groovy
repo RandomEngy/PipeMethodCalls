@@ -24,7 +24,7 @@ pipeline {
     }
     parameters {
         string(name: "latestVersion", description: "The value of the version to deploy.")
-        booleanParam(name: 'publishPrivatePackages', description: 'Whether to publish private packages.', defaultValue: true)
+        booleanParam(name: 'publishNuGetPackage', description: 'Whether to publish NuGet package.', defaultValue: true)
     }
     
     stages {
@@ -62,9 +62,9 @@ pipeline {
             }
         }
         
-        stage('Publish Private NuGet Packages') {
+        stage('Publish NuGet Package') {
             when {
-                expression { return currentBuild.currentResult == 'SUCCESS' && params.publishPrivatePackages }
+                expression { return currentBuild.currentResult == 'SUCCESS' && params.publishNuGetPackage }
             }
 
             steps {
