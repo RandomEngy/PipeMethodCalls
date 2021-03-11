@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,6 +17,13 @@ namespace PipeMethodCalls
 	internal class MethodInvoker<TRequesting> : IResponseHandler, IPipeInvoker<TRequesting>
 		where TRequesting : class
 	{
+        /// <summary>
+        /// Hack : Exception are not properly serialize/deserialize in JSON, we need to recreate them on the pipeClient, therefore we need Coveo.CES.CustomCrawlers assembly.
+        /// </summary>
+        private const string COVEOCUSTOMCRAWLERS_ASSEMBLY = "Coveo.CES.CustomCrawlers, Version=8.0.0.0, Culture=neutral, PublicKeyToken=null";
+
+        private const string COVEO_EXCEPTION = "Coveo";
+        private const string ARGUMENT_EXCEPTION = "Argument";
 		private readonly PipeStreamWrapper pipeStreamWrapper;
 		private readonly PipeMessageProcessor pipeHost;
 		private Dictionary<long, PendingCall> pendingCalls = new Dictionary<long, PendingCall>();
@@ -137,6 +145,9 @@ namespace PipeMethodCalls
 			}
 			else
 			{
+                ThrowCoveoException(response);
+                ThrowGenericException(response);
+
 				throw new PipeInvokeFailedException(response.Error);
 			}
 		}
@@ -173,6 +184,46 @@ namespace PipeMethodCalls
 			else
 			{
 				throw new PipeInvokeFailedException(response.Error);
+			}
+		}
+
+		private void ThrowCoveoException(PipeResponse response)
+		{
+			if (response.Exception != null
+				&& !string.IsNullOrEmpty(response.Exception.ExceptionType)
+				&& response.Exception.ExceptionType.Contains(COVEO_EXCEPTION))
+			{
+				var m_Assembly = Assembly.Load(COVEOCUSTOMCRAWLERS_ASSEMBLY);
+				var type = m_Assembly.GetType(response.Exception.ExceptionType);
+
+				if (response.Exception.InnerException != null)
+				{
+					var innerType = m_Assembly.GetType(response.Exception.InnerException.ExceptionType);
+					var innerException = Activator.CreateInstance(innerType, response.Exception.InnerException.ExceptionMessage) as Exception;
+					throw Activator.CreateInstance(type, response.Exception.ExceptionMessage, innerException) as Exception;
+				}
+
+				throw Activator.CreateInstance(type, response.Exception.ExceptionMessage) as Exception;
+			}
+		}
+
+		private void ThrowGenericException(PipeResponse response)
+		{
+			if (response.Exception != null && !string.IsNullOrEmpty(response.Exception.ExceptionType))
+			{
+				var type = Type.GetType(response.Exception.ExceptionType);
+
+				if (response.Exception.InnerException != null)
+				{
+					var innerType = Type.GetType(response.Exception.InnerException.ExceptionType);
+					var innerException = Activator.CreateInstance(innerType, response.Exception.InnerException.ExceptionMessage) as Exception;
+					throw Activator.CreateInstance(type, response.Exception.ExceptionMessage, innerException) as Exception;
+				}
+
+				if (response.Exception.ExceptionType.Contains(ARGUMENT_EXCEPTION))
+					throw Activator.CreateInstance(type, null, response.Exception.ExceptionMessage) as Exception;
+
+				throw Activator.CreateInstance(type, response.Exception.ExceptionMessage) as Exception;
 			}
 		}
 
