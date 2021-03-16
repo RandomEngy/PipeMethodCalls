@@ -13,8 +13,8 @@
     </dependencies>
   </metadata>
   <files>
-    <file src="PipeMethodCalls\bin\Debug\netstandard2.0\*.dll" target="lib" />
-    <file src="PipeMethodCalls\bin\Debug\netstandard2.0\*.pdb" target="lib" />
-    <file src="PipeMethodCalls\bin\Debug\netstandard2.0\*.json" target="lib" />
+    <file src="PipeMethodCalls\bin\Release\netstandard2.0\*.dll" target="lib" />
+    <file src="PipeMethodCalls\bin\Release\netstandard2.0\*.pdb" target="lib" />
+    <file src="PipeMethodCalls\bin\Release\netstandard2.0\*.json" target="lib" />
 </files>
 </package>
