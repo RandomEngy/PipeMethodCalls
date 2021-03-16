@@ -21,6 +21,7 @@ pipeline {
         disableConcurrentBuilds()
         timeout(time: 2, unit: 'HOURS')
         timestamps()
+        skipDefaultCheckout(true)
     }
     parameters {
         string(name: "latestVersion", description: "The value of the version to deploy.")
@@ -30,6 +31,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
+                cleanWs()
                 checkout([
                     $class: 'GitSCM',
                     branches: [[name: '*/master']],
