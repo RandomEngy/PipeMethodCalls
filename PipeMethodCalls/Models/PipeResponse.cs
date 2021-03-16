@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using PipeMethodCalls.Models;
 
 namespace PipeMethodCalls
 {
@@ -34,6 +35,12 @@ namespace PipeMethodCalls
 		[JsonProperty]
 		public string Error { get; private set; }
 
+        /// <summary>
+        /// The error details. Valid if Succeeded is false.
+        /// </summary>
+        [JsonProperty]
+        public PipeException Exception { get; private set; }
+
 		/// <summary>
 		/// Creates a new success pipe response.
 		/// </summary>
@@ -51,9 +58,9 @@ namespace PipeMethodCalls
 		/// <param name="callId">The ID of the call.</param>
 		/// <param name="message">The failure message.</param>
 		/// <returns>The failure pipe response.</returns>
-		public static PipeResponse Failure(long callId, string message)
+		public static PipeResponse Failure(long callId, string message, Exception ex = null)
 		{
-			return new PipeResponse { Succeeded = false, CallId = callId, Error = message };
+			return new PipeResponse { Succeeded = false, CallId = callId, Error = message, Exception = PipeException.Failure(ex.InnerException) };
 		}
 	}
 }

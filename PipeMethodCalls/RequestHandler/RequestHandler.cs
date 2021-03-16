@@ -131,7 +131,7 @@ namespace PipeMethodCalls
 			}
 			catch (Exception exception)
 			{
-				return PipeResponse.Failure(request.CallId, exception.ToString());
+				return PipeResponse.Failure(request.CallId, exception.ToString(), exception);
 			}
 		}
 	}
