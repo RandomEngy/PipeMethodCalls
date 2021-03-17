@@ -71,8 +71,13 @@ pipeline {
 
             steps {
                 script {
-                    bat "nuget pack PipeMethodCalls.nuspec -properties version=${completeVersion}"
-                    bat "nuget push *.nupkg"
+                    bat "dotnet pack ./PipeMethodCalls/PipeMethodCalls.csproj -c Release --include-symbols --no-dependencies -p:PackageVersion=${completeVersion};TargetFrameworks=netstandard2.0"
+                    
+                    dir("${env.WORKSPACE}/PipeMethodCalls/bin/Release"){
+                        script {
+                            bat "dotnet nuget push *.nupkg --skip-duplicate"
+                        }
+                    }
                 }
                 echo "The nuget package for PipeMethodCalls has been published."
             }
