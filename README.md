@@ -52,7 +52,7 @@ Open an issue or pull request if you'd like to see more built-in serializers.
 * 100% asynchronous communication with .ConfigureAwait(false) to minimize context switches and reduce thread use
 * 45KB with no built-in dependencies
 * Invoking async methods
-* Passing and returning complex types via JSON serialization
+* Passing and returning complex types with pluggable JSON or binary serialization
 * Interleaved or multiple simultaneous calls
 * Throwing exceptions
 * CancellationToken support
