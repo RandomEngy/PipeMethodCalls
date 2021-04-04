@@ -151,7 +151,7 @@ namespace PipeMethodCalls
 			this.logger.Log(() => "Connected.");
 
 			this.wrappedPipeStream = new PipeStreamWrapper(this.rawPipeStream, this.logger);
-			this.Invoker = new MethodInvoker<TRequesting>(this.wrappedPipeStream, this.messageProcessor);
+			this.Invoker = new MethodInvoker<TRequesting>(this.wrappedPipeStream, this.messageProcessor, new NewtonsoftJsonPipeSerializer(), this.logger);
 
 			this.messageProcessor.StartProcessing(wrappedPipeStream);
 		}

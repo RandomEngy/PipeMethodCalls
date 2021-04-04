@@ -94,7 +94,7 @@ namespace PipeMethodCalls
 			this.logger.Log(() => "Connected to client.");
 
 			var wrappedPipeStream = new PipeStreamWrapper(this.rawPipeStream, this.logger);
-			var requestHandler = new RequestHandler<THandling>(wrappedPipeStream, this.handlerFactoryFunc);
+			var requestHandler = new RequestHandler<THandling>(wrappedPipeStream, this.handlerFactoryFunc, new NewtonsoftJsonPipeSerializer(), this.logger);
 
 			this.messageProcessor.StartProcessing(wrappedPipeStream);
 		}

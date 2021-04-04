@@ -13,6 +13,6 @@ namespace PipeMethodCalls
 		/// <summary>
 		/// The task completion source for the call.
 		/// </summary>
-		public TaskCompletionSource<PipeResponse> TaskCompletionSource { get; } = new TaskCompletionSource<PipeResponse>();
+		public TaskCompletionSource<SerializedPipeResponse> TaskCompletionSource { get; } = new TaskCompletionSource<SerializedPipeResponse>();
 	}
 }
