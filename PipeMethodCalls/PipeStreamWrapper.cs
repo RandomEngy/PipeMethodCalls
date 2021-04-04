@@ -7,7 +7,6 @@ using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
 
 namespace PipeMethodCalls
 {
@@ -19,10 +18,6 @@ namespace PipeMethodCalls
 		private readonly byte[] lengthReadBuffer = new byte[4];
 		private readonly PipeStream stream;
 		private readonly Action<string> logger;
-		private static readonly JsonSerializerSettings serializerSettings = new JsonSerializerSettings
-		{
-			NullValueHandling = NullValueHandling.Ignore
-		};
 
 		// Prevents more than one thread from writing to the pipe stream at once
 		private readonly SemaphoreSlim writeLock = new SemaphoreSlim(1, 1);
