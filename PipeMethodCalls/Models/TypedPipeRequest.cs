@@ -51,7 +51,7 @@ namespace PipeMethodCalls
 				{
 					builder.AppendLine();
 					builder.Append("    ");
-					builder.Append(parameter.ToString());
+					builder.Append(parameter?.ToString() ?? "<null>");
 				}
 			}
 
