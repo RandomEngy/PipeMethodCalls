@@ -145,13 +145,7 @@ namespace PipeMethodCalls
 			else
 			{
 				typedResponse = TypedPipeResponse.Failure(response.CallId, response.Error);
-                
-                
-                //ThrowCoveoException(response);
-                //ThrowGenericException(response);
-
-				//throw new PipeInvokeFailedException(response.Error);
-			}
+            }
 
 			this.logger.Log(() => "Received " + typedResponse.ToString());
 
@@ -161,6 +155,9 @@ namespace PipeMethodCalls
 			}
 			else
 			{
+                ThrowCoveoException(response);
+                ThrowGenericException(response);
+
 				throw new PipeInvokeFailedException(typedResponse.Error);
 			}
 		}
@@ -193,7 +190,7 @@ namespace PipeMethodCalls
 			}
 		}
 
-		private void ThrowCoveoException(PipeResponse response)
+		private void ThrowCoveoException(SerializedPipeResponse response)
 		{
 			if (response.Exception != null
 				&& !string.IsNullOrEmpty(response.Exception.ExceptionType)
@@ -213,7 +210,7 @@ namespace PipeMethodCalls
 			}
 		}
 
-		private void ThrowGenericException(PipeResponse response)
+		private void ThrowGenericException(SerializedPipeResponse response)
 		{
 			if (response.Exception != null && !string.IsNullOrEmpty(response.Exception.ExceptionType))
 			{

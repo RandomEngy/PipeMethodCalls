@@ -1,5 +1,4 @@
 ﻿using System;
-using Newtonsoft.Json;
 
 namespace PipeMethodCalls.Models
 {
@@ -8,31 +7,26 @@ namespace PipeMethodCalls.Models
         /// <summary>
         /// The exception. Valid if Succeeded is false.
         /// </summary>
-        [JsonProperty]
         public Exception Exception { get; private set; }
 
         /// <summary>
         /// The exception type. Valid if Succeeded is false.
         /// </summary>
-        [JsonProperty]
         public string ExceptionType { get; private set; }
 
         /// <summary>
         /// The exception message. Valid if Succeeded is false.
         /// </summary>
-        [JsonProperty]
         public string ExceptionMessage { get; private set; }
 
         /// <summary>
         /// The exception stack. Valid if Succeeded is false.
         /// </summary>
-        [JsonProperty]
         public string ExceptionStack { get; private set; }
 
         /// <summary>
         /// The inner exception. Valid if Succeeded is false.
         /// </summary>
-        [JsonProperty]
         public PipeException InnerException { get; private set; }
 
         /// <summary>

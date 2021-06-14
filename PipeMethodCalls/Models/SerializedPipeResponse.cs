@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using PipeMethodCalls.Models;
 
 namespace PipeMethodCalls
 {
@@ -36,6 +37,8 @@ namespace PipeMethodCalls
 		/// The error details. Valid if Succeeded is false.
 		/// </summary>
 		public string Error { get; private set; }
+
+		public PipeException Exception { get; private set; }
 
 		/// <summary>
 		/// Creates a new success pipe response.
