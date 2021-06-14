@@ -16,6 +16,7 @@ namespace PipeMethodCalls
 		where TRequesting : class
 		where THandling : class
 	{
+		private readonly IPipeSerializer serializer;
 		private readonly string pipeName;
 		private readonly string serverName;
 		private readonly Func<THandling> handlerFactoryFunc;
@@ -30,34 +31,47 @@ namespace PipeMethodCalls
 		/// <summary>
 		/// Initializes a new instance of the <see cref="PipeClientWithCallback{TRequesting,THandling}"/> class.
 		/// </summary>
+		/// <param name="serializer">
+		/// The serializer to use for the pipe. You can include a library like PipeMethodCalls.NetJson and pass in <c>new NetJsonPipeSerializer()</c>.
+		/// This will serialize and deserialize method parameters and return values so they can be passed over the pipe.
+		/// </param>
 		/// <param name="pipeName">The name of the pipe.</param>
 		/// <param name="handlerFactoryFunc">A factory function to provide the handler implementation.</param>
-		public PipeClientWithCallback(string pipeName, Func<THandling> handlerFactoryFunc)
-			: this(".", pipeName, handlerFactoryFunc)
+		public PipeClientWithCallback(IPipeSerializer serializer, string pipeName, Func<THandling> handlerFactoryFunc)
+			: this(serializer, ".", pipeName, handlerFactoryFunc)
 		{
 		}
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="PipeClientWithCallback{TRequesting,THandling}"/> class.
 		/// </summary>
+		/// <param name="serializer">
+		/// The serializer to use for the pipe. You can include a library like PipeMethodCalls.NetJson and pass in <c>new NetJsonPipeSerializer()</c>.
+		/// This will serialize and deserialize method parameters and return values so they can be passed over the pipe.
+		/// </param>
 		/// <param name="pipeName">The name of the pipe.</param>
 		/// <param name="handlerFactoryFunc">A factory function to provide the handler implementation.</param>
 		/// <param name="options">One of the enumeration values that determines how to open or create the pipe.</param>
 		/// <param name="impersonationLevel">One of the enumeration values that determines the security impersonation level.</param>
 		/// <param name="inheritability">One of the enumeration values that determines whether the underlying handle will be inheritable by child processes.</param>
-		public PipeClientWithCallback(string pipeName, Func<THandling> handlerFactoryFunc, PipeOptions options, TokenImpersonationLevel impersonationLevel, HandleInheritability inheritability)
-			: this(".", pipeName, handlerFactoryFunc, options, impersonationLevel, inheritability)
+		public PipeClientWithCallback(IPipeSerializer serializer, string pipeName, Func<THandling> handlerFactoryFunc, PipeOptions options, TokenImpersonationLevel impersonationLevel, HandleInheritability inheritability)
+			: this(serializer, ".", pipeName, handlerFactoryFunc, options, impersonationLevel, inheritability)
 		{
 		}
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="PipeClientWithCallback{TRequesting,THandling}"/> class.
 		/// </summary>
+		/// <param name="serializer">
+		/// The serializer to use for the pipe. You can include a library like PipeMethodCalls.NetJson and pass in <c>new NetJsonPipeSerializer()</c>.
+		/// This will serialize and deserialize method parameters and return values so they can be passed over the pipe.
+		/// </param>
 		/// <param name="serverName">The name of the server to connect to.</param>
 		/// <param name="pipeName">The name of the pipe.</param>
 		/// <param name="handlerFactoryFunc">A factory function to provide the handler implementation.</param>
-		public PipeClientWithCallback(string serverName, string pipeName, Func<THandling> handlerFactoryFunc)
+		public PipeClientWithCallback(IPipeSerializer serializer, string serverName, string pipeName, Func<THandling> handlerFactoryFunc)
 		{
+			this.serializer = serializer;
 			this.pipeName = pipeName;
 			this.serverName = serverName;
 			this.handlerFactoryFunc = handlerFactoryFunc;
@@ -66,14 +80,19 @@ namespace PipeMethodCalls
 		/// <summary>
 		/// Initializes a new instance of the <see cref="PipeClientWithCallback{TRequesting,THandling}"/> class.
 		/// </summary>
+		/// <param name="serializer">
+		/// The serializer to use for the pipe. You can include a library like PipeMethodCalls.NetJson and pass in <c>new NetJsonPipeSerializer()</c>.
+		/// This will serialize and deserialize method parameters and return values so they can be passed over the pipe.
+		/// </param>
 		/// <param name="serverName">The name of the server to connect to.</param>
 		/// <param name="pipeName">The name of the pipe.</param>
 		/// <param name="handlerFactoryFunc">A factory function to provide the handler implementation.</param>
 		/// <param name="options">One of the enumeration values that determines how to open or create the pipe.</param>
 		/// <param name="impersonationLevel">One of the enumeration values that determines the security impersonation level.</param>
 		/// <param name="inheritability">One of the enumeration values that determines whether the underlying handle will be inheritable by child processes.</param>
-		public PipeClientWithCallback(string serverName, string pipeName, Func<THandling> handlerFactoryFunc, PipeOptions options, TokenImpersonationLevel impersonationLevel, HandleInheritability inheritability)
+		public PipeClientWithCallback(IPipeSerializer serializer, string serverName, string pipeName, Func<THandling> handlerFactoryFunc, PipeOptions options, TokenImpersonationLevel impersonationLevel, HandleInheritability inheritability)
 		{
+			this.serializer = serializer;
 			this.pipeName = pipeName;
 			this.serverName = serverName;
 			this.handlerFactoryFunc = handlerFactoryFunc;
@@ -85,13 +104,18 @@ namespace PipeMethodCalls
 		/// <summary>
 		/// Initializes a new instance of the <see cref="PipeClientWithCallback{TRequesting,THandling}"/> class.
 		/// </summary>
+		/// <param name="serializer">
+		/// The serializer to use for the pipe. You can include a library like PipeMethodCalls.NetJson and pass in <c>new NetJsonPipeSerializer()</c>.
+		/// This will serialize and deserialize method parameters and return values so they can be passed over the pipe.
+		/// </param>
 		/// <param name="rawPipe">Raw pipe stream to wrap with method call capability. Must be set up with PipeDirection - <see cref="PipeDirection.InOut"/> and PipeOptions - <see cref="PipeOptions.Asynchronous"/></param>
 		/// <param name="handlerFactoryFunc">A factory function to provide the handler implementation.</param>
 		/// <exception cref="ArgumentException">Provided pipe cannot be wrapped. Provided pipe must be setup with the following: PipeDirection - <see cref="PipeDirection.InOut"/> and PipeOptions - <see cref="PipeOptions.Asynchronous"/></exception>
-		public PipeClientWithCallback(NamedPipeClientStream rawPipe, Func<THandling> handlerFactoryFunc)
+		public PipeClientWithCallback(IPipeSerializer serializer, NamedPipeClientStream rawPipe, Func<THandling> handlerFactoryFunc)
 		{
 			Utilities.ValidateRawClientPipe(rawPipe);
 
+			this.serializer = serializer;
 			this.rawPipeStream = rawPipe;
 			this.handlerFactoryFunc = handlerFactoryFunc;
 		}
@@ -162,8 +186,8 @@ namespace PipeMethodCalls
 			this.logger.Log(() => "Connected.");
 
 			this.wrappedPipeStream = new PipeStreamWrapper(this.rawPipeStream, this.logger);
-			this.Invoker = new MethodInvoker<TRequesting>(this.wrappedPipeStream, this.messageProcessor);
-			var requestHandler = new RequestHandler<THandling>(this.wrappedPipeStream, handlerFactoryFunc);
+			this.Invoker = new MethodInvoker<TRequesting>(this.wrappedPipeStream, this.messageProcessor, this.serializer, this.logger);
+			var requestHandler = new RequestHandler<THandling>(this.wrappedPipeStream, handlerFactoryFunc, this.serializer, this.logger);
 
 			this.messageProcessor.StartProcessing(wrappedPipeStream);
 		}

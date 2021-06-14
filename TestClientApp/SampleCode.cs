@@ -1,4 +1,5 @@
 ﻿using PipeMethodCalls;
+using PipeMethodCalls.NetJson;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,7 +13,7 @@ namespace TestClientApp
 	{
 		public async Task RunAsync()
 		{
-			var pipeClient = new PipeClient<IAdder>("mypipe");
+			var pipeClient = new PipeClient<IAdder>(new NetJsonPipeSerializer(), "mypipe");
 			await pipeClient.ConnectAsync();
 			int result = await pipeClient.InvokeAsync(adder => adder.AddNumbers(1, 3));
 		}

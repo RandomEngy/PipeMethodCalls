@@ -26,6 +26,8 @@ namespace PipeMethodCalls
         private const string ARGUMENT_EXCEPTION = "Argument";
 		private readonly PipeStreamWrapper pipeStreamWrapper;
 		private readonly PipeMessageProcessor pipeHost;
+		private readonly IPipeSerializer serializer;
+		private readonly Action<string> logger;
 		private Dictionary<long, PendingCall> pendingCalls = new Dictionary<long, PendingCall>();
 
 		// Lock object for accessing pending calls dictionary.
@@ -37,11 +39,15 @@ namespace PipeMethodCalls
 		/// Initializes a new instance of the <see cref="MethodInvoker" /> class.
 		/// </summary>
 		/// <param name="pipeStreamWrapper">The pipe stream wrapper to use for invocation and response handling.</param>
-		public MethodInvoker(PipeStreamWrapper pipeStreamWrapper, PipeMessageProcessor pipeHost)
+		/// <param name="pipeHost">The host for the pipe.</param>
+		/// <param name="serializer">The serializer to use on the parameters.</param>
+		/// <param name="logger">The action to run to log events.</param>
+		public MethodInvoker(PipeStreamWrapper pipeStreamWrapper, PipeMessageProcessor pipeHost, IPipeSerializer serializer, Action<string> logger)
 		{
 			this.pipeStreamWrapper = pipeStreamWrapper;
 			this.pipeStreamWrapper.ResponseHandler = this;
-
+			this.serializer = serializer;
+			this.logger = logger;
 			this.pipeHost = pipeHost;
 		}
 
@@ -49,7 +55,7 @@ namespace PipeMethodCalls
 		/// Handles a response message received from a remote endpoint.
 		/// </summary>
 		/// <param name="response">The response message to handle.</param>
-		public void HandleResponse(PipeResponse response)
+		public void HandleResponse(SerializedPipeResponse response)
 		{
 			PendingCall pendingCall = null;
 
@@ -84,7 +90,7 @@ namespace PipeMethodCalls
 
 			Utilities.EnsureReadyForInvoke(this.pipeHost.State, this.pipeHost.PipeFault);
 
-			PipeResponse response = await this.GetResponseFromExpressionAsync(expression, cancellationToken).ConfigureAwait(false);
+			SerializedPipeResponse response = await this.GetResponseFromExpressionAsync(expression, cancellationToken).ConfigureAwait(false);
 
 			if (!response.Succeeded)
 			{
@@ -106,7 +112,7 @@ namespace PipeMethodCalls
 
 			Utilities.EnsureReadyForInvoke(this.pipeHost.State, this.pipeHost.PipeFault);
 
-			PipeResponse response = await this.GetResponseFromExpressionAsync(expression, cancellationToken).ConfigureAwait(false);
+			SerializedPipeResponse response = await this.GetResponseFromExpressionAsync(expression, cancellationToken).ConfigureAwait(false);
 
 			if (!response.Succeeded)
 			{
@@ -130,25 +136,32 @@ namespace PipeMethodCalls
 
 			Utilities.EnsureReadyForInvoke(this.pipeHost.State, this.pipeHost.PipeFault);
 
-			PipeResponse response = await this.GetResponseFromExpressionAsync(expression, cancellationToken).ConfigureAwait(false);
-
+			SerializedPipeResponse response = await this.GetResponseFromExpressionAsync(expression, cancellationToken).ConfigureAwait(false);
+			TypedPipeResponse typedResponse;
 			if (response.Succeeded)
 			{
-				if (Utilities.TryConvert(response.Data, typeof(TResult), out object result))
-				{
-					return (TResult)result;
-				}
-				else
-				{
-					throw new InvalidOperationException($"Unable to convert returned value to '{typeof(TResult).Name}'.");
-				}
+				typedResponse = TypedPipeResponse.Success(response.CallId, this.serializer.Deserialize(response.Data, typeof(TResult)));
 			}
 			else
 			{
-                ThrowCoveoException(response);
-                ThrowGenericException(response);
+				typedResponse = TypedPipeResponse.Failure(response.CallId, response.Error);
+                
+                
+                //ThrowCoveoException(response);
+                //ThrowGenericException(response);
 
-				throw new PipeInvokeFailedException(response.Error);
+				//throw new PipeInvokeFailedException(response.Error);
+			}
+
+			this.logger.Log(() => "Received " + typedResponse.ToString());
+
+			if (typedResponse.Succeeded)
+			{
+				return (TResult)typedResponse.Data;
+			}
+			else
+			{
+				throw new PipeInvokeFailedException(typedResponse.Error);
 			}
 		}
 
@@ -168,18 +181,11 @@ namespace PipeMethodCalls
 
 			Utilities.EnsureReadyForInvoke(this.pipeHost.State, this.pipeHost.PipeFault);
 
-			PipeResponse response = await this.GetResponseFromExpressionAsync(expression, cancellationToken).ConfigureAwait(false);
+			SerializedPipeResponse response = await this.GetResponseFromExpressionAsync(expression, cancellationToken).ConfigureAwait(false);
 
 			if (response.Succeeded)
 			{
-				if (Utilities.TryConvert(response.Data, typeof(TResult), out object result))
-				{
-					return (TResult)result;
-				}
-				else
-				{
-					throw new InvalidOperationException($"Unable to convert returned value to '{typeof(TResult).Name}'.");
-				}
+				return (TResult)this.serializer.Deserialize(response.Data, typeof(TResult));
 			}
 			else
 			{
@@ -233,9 +239,9 @@ namespace PipeMethodCalls
 		/// <param name="expression">The expression to execute.</param>
 		/// <param name="cancellationToken">A token to cancel the request.</param>
 		/// <returns>A response for the given expression.</returns>
-		private async Task<PipeResponse> GetResponseFromExpressionAsync(Expression expression, CancellationToken cancellationToken)
+		private async Task<SerializedPipeResponse> GetResponseFromExpressionAsync(Expression expression, CancellationToken cancellationToken)
 		{
-			PipeRequest request = this.CreateRequest(expression);
+			SerializedPipeRequest request = this.CreateRequest(expression);
 			return await this.GetResponseAsync(request, cancellationToken).ConfigureAwait(false);
 		}
 
@@ -244,7 +250,7 @@ namespace PipeMethodCalls
 		/// </summary>
 		/// <param name="expression">The expression to execute.</param>
 		/// <returns>The request to send over the pipe to execute that expression.</returns>
-		private PipeRequest CreateRequest(Expression expression)
+		private SerializedPipeRequest CreateRequest(Expression expression)
 		{
 			long callId = Interlocked.Increment(ref this.currentCall);
 
@@ -258,13 +264,20 @@ namespace PipeMethodCalls
 				throw new ArgumentException("Only supports calling methods, ex: x => x.GetData(a, b)");
 			}
 
-			return new PipeRequest
+			string methodName = methodCallExp.Method.Name;
+			object[] argumentList = methodCallExp.Arguments.Select(argumentExpression => Expression.Lambda(argumentExpression).Compile().DynamicInvoke()).ToArray();
+			Type[] genericArguments = methodCallExp.Method.GetGenericArguments();
+
+			var typedRequest = new TypedPipeRequest
 			{
 				CallId = callId,
-				MethodName = methodCallExp.Method.Name,
-				GenericArguments = methodCallExp.Method.GetGenericArguments(),
-				Parameters = methodCallExp.Arguments.Select(argumentExpression => Expression.Lambda(argumentExpression).Compile().DynamicInvoke()).ToArray()
+				MethodName = methodName,
+				Parameters = argumentList,
+				GenericArguments = genericArguments
 			};
+
+			this.logger.Log(() => "Sending " + typedRequest.ToString());
+			return typedRequest.Serialize(this.serializer);
 		}
 
 		/// <summary>
@@ -273,7 +286,7 @@ namespace PipeMethodCalls
 		/// <param name="request">The request to send.</param>
 		/// <param name="cancellationToken">A token to cancel the request.</param>
 		/// <returns>The pipe response.</returns>
-		private async Task<PipeResponse> GetResponseAsync(PipeRequest request, CancellationToken cancellationToken)
+		private async Task<SerializedPipeResponse> GetResponseAsync(SerializedPipeRequest request, CancellationToken cancellationToken)
 		{
 			var pendingCall = new PendingCall();
 

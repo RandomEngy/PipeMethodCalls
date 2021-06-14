@@ -1,4 +1,5 @@
 ﻿using PipeMethodCalls;
+using PipeMethodCalls.NetJson;
 using System;
 using System.Collections.Generic;
 using System.IO.Pipes;
@@ -22,9 +23,9 @@ namespace TestCallbackServerApp
 		private static async Task RunServerAsync()
 		{
 			var rawPipeStream = new NamedPipeServerStream("testpipe", PipeDirection.InOut, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous);
-			var pipeServerWithCallback = new PipeServerWithCallback<IConcatenator, IAdder>(rawPipeStream, () => new Adder());
+			var pipeServerWithCallback = new PipeServerWithCallback<IConcatenator, IAdder>(new NetJsonPipeSerializer(), rawPipeStream, () => new Adder());
 
-			//var pipeServerWithCallback = new PipeServerWithCallback<IConcatenator, IAdder>("testpipe", () => new Adder());
+			//var pipeServerWithCallback = new PipeServerWithCallback<IConcatenator, IAdder>(new NetJsonPipeSerializer(), "testpipe", () => new Adder());
 			pipeServerWithCallback.SetLogger(message => Console.WriteLine(message));
 
 			try

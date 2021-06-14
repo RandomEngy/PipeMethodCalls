@@ -19,6 +19,7 @@ namespace PipeMethodCalls
 		private readonly PipeOptions? options;
 		private readonly TokenImpersonationLevel? impersonationLevel;
 		private readonly HandleInheritability? inheritability;
+		private readonly IPipeSerializer serializer;
 		private NamedPipeClientStream rawPipeStream;
 		private PipeStreamWrapper wrappedPipeStream;
 		private Action<string> logger;
@@ -27,31 +28,44 @@ namespace PipeMethodCalls
 		/// <summary>
 		/// Initializes a new instance of the <see cref="PipeClient{TRequesting}"/> class.
 		/// </summary>
+		/// <param name="serializer">
+		/// The serializer to use for the pipe. You can include a library like PipeMethodCalls.NetJson and pass in <c>new NetJsonPipeSerializer()</c>.
+		/// This will serialize and deserialize method parameters and return values so they can be passed over the pipe.
+		/// </param>
 		/// <param name="pipeName">The name of the pipe.</param>
-		public PipeClient(string pipeName)
-			: this(".", pipeName)
+		public PipeClient(IPipeSerializer serializer, string pipeName)
+			: this(serializer, ".", pipeName)
 		{
 		}
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="PipeClient{TRequesting}"/> class.
 		/// </summary>
+		/// <param name="serializer">
+		/// The serializer to use for the pipe. You can include a library like PipeMethodCalls.NetJson and pass in <c>new NetJsonPipeSerializer()</c>.
+		/// This will serialize and deserialize method parameters and return values so they can be passed over the pipe.
+		/// </param>
 		/// <param name="pipeName">The name of the pipe.</param>
 		/// <param name="options">One of the enumeration values that determines how to open or create the pipe.</param>
 		/// <param name="impersonationLevel">One of the enumeration values that determines the security impersonation level.</param>
 		/// <param name="inheritability">One of the enumeration values that determines whether the underlying handle will be inheritable by child processes.</param>
-		public PipeClient(string pipeName, PipeOptions options, TokenImpersonationLevel impersonationLevel, HandleInheritability inheritability)
-			: this(".", pipeName, options, impersonationLevel, inheritability)
+		public PipeClient(IPipeSerializer serializer, string pipeName, PipeOptions options, TokenImpersonationLevel impersonationLevel, HandleInheritability inheritability)
+			: this(serializer, ".", pipeName, options, impersonationLevel, inheritability)
 		{
 		}
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="PipeClient{TRequesting}"/> class.
 		/// </summary>
+		/// <param name="serializer">
+		/// The serializer to use for the pipe. You can include a library like PipeMethodCalls.NetJson and pass in <c>new NetJsonPipeSerializer()</c>.
+		/// This will serialize and deserialize method parameters and return values so they can be passed over the pipe.
+		/// </param>
 		/// <param name="serverName">The name of the server to connect to.</param>
 		/// <param name="pipeName">The name of the pipe.</param>
-		public PipeClient(string serverName, string pipeName)
+		public PipeClient(IPipeSerializer serializer, string serverName, string pipeName)
 		{
+			this.serializer = serializer;
 			this.pipeName = pipeName;
 			this.serverName = serverName;
 		}
@@ -59,13 +73,18 @@ namespace PipeMethodCalls
 		/// <summary>
 		/// Initializes a new instance of the <see cref="PipeClient{TRequesting}"/> class.
 		/// </summary>
+		/// <param name="serializer">
+		/// The serializer to use for the pipe. You can include a library like PipeMethodCalls.NetJson and pass in <c>new NetJsonPipeSerializer()</c>.
+		/// This will serialize and deserialize method parameters and return values so they can be passed over the pipe.
+		/// </param>
 		/// <param name="serverName">The name of the server to connect to.</param>
 		/// <param name="pipeName">The name of the pipe.</param>
 		/// <param name="options">One of the enumeration values that determines how to open or create the pipe.</param>
 		/// <param name="impersonationLevel">One of the enumeration values that determines the security impersonation level.</param>
 		/// <param name="inheritability">One of the enumeration values that determines whether the underlying handle will be inheritable by child processes.</param>
-		public PipeClient(string serverName, string pipeName, PipeOptions options, TokenImpersonationLevel impersonationLevel, HandleInheritability inheritability)
+		public PipeClient(IPipeSerializer serializer, string serverName, string pipeName, PipeOptions options, TokenImpersonationLevel impersonationLevel, HandleInheritability inheritability)
 		{
+			this.serializer = serializer;
 			this.pipeName = pipeName;
 			this.serverName = serverName;
 			this.options = options;
@@ -76,12 +95,17 @@ namespace PipeMethodCalls
 		/// <summary>
 		/// Initializes a new instance of the <see cref="PipeClient{TRequesting}"/> class.
 		/// </summary>
+		/// <param name="serializer">
+		/// The serializer to use for the pipe. You can include a library like PipeMethodCalls.NetJson and pass in <c>new NetJsonPipeSerializer()</c>.
+		/// This will serialize and deserialize method parameters and return values so they can be passed over the pipe.
+		/// </param>
 		/// <param name="rawPipe">Raw pipe stream to wrap with method call capability. Must be set up with PipeDirection - <see cref="PipeDirection.InOut"/> and PipeOptions - <see cref="PipeOptions.Asynchronous"/></param>
 		/// <exception cref="ArgumentException">Provided pipe cannot be wrapped. Provided pipe must be setup with the following: PipeDirection - <see cref="PipeDirection.InOut"/> and PipeOptions - <see cref="PipeOptions.Asynchronous"/></exception>
-		public PipeClient(NamedPipeClientStream rawPipe)
+		public PipeClient(IPipeSerializer serializer, NamedPipeClientStream rawPipe)
 		{
 			Utilities.ValidateRawClientPipe(rawPipe);
 
+			this.serializer = serializer;
 			this.rawPipeStream = rawPipe;
 		}
 		
@@ -151,7 +175,7 @@ namespace PipeMethodCalls
 			this.logger.Log(() => "Connected.");
 
 			this.wrappedPipeStream = new PipeStreamWrapper(this.rawPipeStream, this.logger);
-			this.Invoker = new MethodInvoker<TRequesting>(this.wrappedPipeStream, this.messageProcessor);
+			this.Invoker = new MethodInvoker<TRequesting>(this.wrappedPipeStream, this.messageProcessor, this.serializer, this.logger);
 
 			this.messageProcessor.StartProcessing(wrappedPipeStream);
 		}

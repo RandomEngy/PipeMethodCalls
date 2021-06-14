@@ -1,4 +1,5 @@
 ﻿using PipeMethodCalls;
+using PipeMethodCalls.NetJson;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,8 +13,13 @@ namespace TestCallbackClientApp
 	{
 		public async Task RunAsync()
 		{
-			var pipeClient = new PipeClientWithCallback<IAdder, IConcatenator>("mypipe", () => new Concatenator());
+			var pipeClient = new PipeClientWithCallback<IAdder, IConcatenator>(
+				new NetJsonPipeSerializer(),
+				"mypipe",
+				() => new Concatenator());
+
 			await pipeClient.ConnectAsync();
+
 			int result = await pipeClient.InvokeAsync(adder => adder.AddNumbers(4, 7));
 		}
 	}

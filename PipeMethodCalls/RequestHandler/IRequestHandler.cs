@@ -9,6 +9,6 @@
 		/// Handles a request message received from a remote endpoint.
 		/// </summary>
 		/// <param name="request">The request message.</param>
-		void HandleRequest(PipeRequest request);
+		void HandleRequest(SerializedPipeRequest request);
 	}
 }

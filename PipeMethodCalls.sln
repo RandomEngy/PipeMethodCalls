@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestClientApp", "TestClient
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestServerApp", "TestServerApp\TestServerApp.csproj", "{46E21C58-74BA-46B4-B952-5D3243753C08}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PipeMethodCalls.NetJson", "PipeMethodCalls.NetJson\PipeMethodCalls.NetJson.csproj", "{0F66A1E5-E5CB-47EE-A1B5-8B30686B2EBF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -45,6 +47,10 @@ Global
 		{46E21C58-74BA-46B4-B952-5D3243753C08}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{46E21C58-74BA-46B4-B952-5D3243753C08}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{46E21C58-74BA-46B4-B952-5D3243753C08}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0F66A1E5-E5CB-47EE-A1B5-8B30686B2EBF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0F66A1E5-E5CB-47EE-A1B5-8B30686B2EBF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0F66A1E5-E5CB-47EE-A1B5-8B30686B2EBF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0F66A1E5-E5CB-47EE-A1B5-8B30686B2EBF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
