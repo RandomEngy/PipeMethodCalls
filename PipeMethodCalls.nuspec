@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package >
   <metadata>
-    <id>Coveo.PipeMethodCalls</id>
+    <id>PipeMethodCalls</id>
     <version>$version$</version>
     <authors>Coveo Connectors Team</authors>
     <owners>RandomEngy</owners>
