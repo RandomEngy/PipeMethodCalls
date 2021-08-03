@@ -98,7 +98,7 @@ namespace PipeMethodCalls
 
 			cancellationToken.Register(() =>
 			{
-				this.pipeCloseCompletionSource.SetCanceled();
+				this.pipeCloseCompletionSource.TrySetCanceled();
 			});
 
 			return this.pipeCloseCompletionSource.Task;
