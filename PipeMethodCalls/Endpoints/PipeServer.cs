@@ -17,6 +17,7 @@ namespace PipeMethodCalls
 		private readonly string pipeName;
 		private readonly Func<THandling> handlerFactoryFunc;
 		private readonly PipeOptions? options;
+		private readonly int maxNumberOfServerInstances;
 		private NamedPipeServerStream rawPipeStream;
 		private Action<string> logger;
 		private PipeMessageProcessor messageProcessor = new PipeMessageProcessor();
@@ -31,12 +32,14 @@ namespace PipeMethodCalls
 		/// <param name="pipeName">The pipe name.</param>
 		/// <param name="handlerFactoryFunc">A factory function to provide the handler implementation.</param>
 		/// <param name="options">Extra options for the pipe.</param>
-		public PipeServer(IPipeSerializer serializer, string pipeName, Func<THandling> handlerFactoryFunc, PipeOptions? options = null)
+		/// <param name="maxNumberOfServerInstances">The maximum number of server instances that can be created for this pipe name. -1 for unlimited. Default is 1.</param>
+		public PipeServer(IPipeSerializer serializer, string pipeName, Func<THandling> handlerFactoryFunc, PipeOptions? options = null, int maxNumberOfServerInstances = 1)
 		{
 			this.serializer = serializer;
 			this.pipeName = pipeName;
 			this.handlerFactoryFunc = handlerFactoryFunc;
 			this.options = options;
+			this.maxNumberOfServerInstances = maxNumberOfServerInstances;
 		}
 
 		/// <summary>
@@ -139,7 +142,7 @@ namespace PipeMethodCalls
 			this.rawPipeStream = new NamedPipeServerStream(
 				this.pipeName,
 				PipeDirection.InOut,
-				1,
+				this.maxNumberOfServerInstances,
 				PipeTransmissionMode.Byte,
 				pipeOptionsToPass);
 
