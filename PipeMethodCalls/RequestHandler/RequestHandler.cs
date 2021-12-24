@@ -94,7 +94,8 @@ namespace PipeMethodCalls
 				return TypedPipeResponse.Failure(request.CallId, $"Handler implementation returned null for interface '{typeof(THandling).FullName}'");
 			}
 
-			MethodInfo method = handlerInstance.GetType().GetMethod(request.MethodName);
+			// GetMethod() doesn't seem to reliably work for F#
+			MethodInfo method = handlerInstance.GetType().GetRuntimeMethods().FirstOrDefault(x => x.Name.Split('.').Last() == request.MethodName);
 			if (method == null)
 			{
 				return TypedPipeResponse.Failure(request.CallId, $"Method '{request.MethodName}' not found in interface '{typeof(THandling).FullName}'.");
