@@ -24,6 +24,7 @@
     <Reference Include="System.Net.Http" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\PipeMethodCalls.MessagePack\PipeMethodCalls.MessagePack.csproj" />
     <ProjectReference Include="..\PipeMethodCalls.NetJson\PipeMethodCalls.NetJson.csproj" />
     <ProjectReference Include="..\PipeMethodCalls\PipeMethodCalls.csproj" />
     <ProjectReference Include="..\TestAppCore\TestAppCore.csproj" />

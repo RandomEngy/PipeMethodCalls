@@ -1,21 +1,23 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.28621.142
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.32112.339
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PipeMethodCalls", "PipeMethodCalls\PipeMethodCalls.csproj", "{3D455E57-BDF2-4D07-9230-4D8E804F49B8}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestAppCore", "TestAppCore\TestAppCore.csproj", "{B222514E-A893-4A87-AD87-2E8179E7C6AF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestCallbackClientApp", "TestCallbackClientApp\TestCallbackClientApp.csproj", "{7AD9E040-1D5B-43BB-A067-30C876662232}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestCallbackClientApp", "TestCallbackClientApp\TestCallbackClientApp.csproj", "{7AD9E040-1D5B-43BB-A067-30C876662232}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestCallbackServerApp", "TestCallbackServerApp\TestCallbackServerApp.csproj", "{DE3AC2C6-6ECA-4B1F-A738-C525B75E46D9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestCallbackServerApp", "TestCallbackServerApp\TestCallbackServerApp.csproj", "{DE3AC2C6-6ECA-4B1F-A738-C525B75E46D9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestClientApp", "TestClientApp\TestClientApp.csproj", "{5CD1245A-F683-45BC-B265-A8DA98C890AD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestClientApp", "TestClientApp\TestClientApp.csproj", "{5CD1245A-F683-45BC-B265-A8DA98C890AD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestServerApp", "TestServerApp\TestServerApp.csproj", "{46E21C58-74BA-46B4-B952-5D3243753C08}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestServerApp", "TestServerApp\TestServerApp.csproj", "{46E21C58-74BA-46B4-B952-5D3243753C08}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PipeMethodCalls.NetJson", "PipeMethodCalls.NetJson\PipeMethodCalls.NetJson.csproj", "{0F66A1E5-E5CB-47EE-A1B5-8B30686B2EBF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PipeMethodCalls.NetJson", "PipeMethodCalls.NetJson\PipeMethodCalls.NetJson.csproj", "{0F66A1E5-E5CB-47EE-A1B5-8B30686B2EBF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PipeMethodCalls.MessagePack", "PipeMethodCalls.MessagePack\PipeMethodCalls.MessagePack.csproj", "{B46297A4-6216-4B6A-A7E6-5EB7420D5617}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -51,6 +53,10 @@ Global
 		{0F66A1E5-E5CB-47EE-A1B5-8B30686B2EBF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0F66A1E5-E5CB-47EE-A1B5-8B30686B2EBF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0F66A1E5-E5CB-47EE-A1B5-8B30686B2EBF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B46297A4-6216-4B6A-A7E6-5EB7420D5617}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B46297A4-6216-4B6A-A7E6-5EB7420D5617}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B46297A4-6216-4B6A-A7E6-5EB7420D5617}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B46297A4-6216-4B6A-A7E6-5EB7420D5617}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
