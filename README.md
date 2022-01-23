@@ -43,8 +43,10 @@ This library uses named pipes to invoke method calls on a remote endpoint. The m
 ### Serialization
 PipeMethodCalls supports customizable serialization logic through `IPipeSerializer`. You've got two options:
 
-* Use the pre-built serializer `new NetJsonPipeSerializer()` from the PipeMethodCalls.NetJson package. That uses the System.Text.Json serializer.
-* Plug in your own implementation of `IPipeSerializer`. Refer to [the NetJsonPipeSerializer code](https://github.com/RandomEngy/PipeMethodCalls/blob/master/PipeMethodCalls.NetJson/NetJsonPipeSerializer.cs) for an example of how to do this. This method also supports binary serializers like MessagePack.
+* Use a pre-built serializer
+  * `new NetJsonPipeSerializer()` from the PipeMethodCalls.NetJson package. That uses the System.Text.Json serializer that's built into .NET.
+  * `new MessagePackPipeSerializer()` from the PipeMethodCalls.MessagePack package. That uses the [MessagePack-CSharp](https://github.com/neuecc/MessagePack-CSharp) serializer, which has excellent performance.
+* Plug in your own implementation of `IPipeSerializer`. Refer to [the NetJsonPipeSerializer code](https://github.com/RandomEngy/PipeMethodCalls/blob/master/PipeMethodCalls.NetJson/NetJsonPipeSerializer.cs) for an example of how to do this.
 
 Open an issue or pull request if you'd like to see more built-in serializers.
 

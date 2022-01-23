@@ -9,11 +9,16 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PipeMethodCalls.NetJson", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PipeMethodCalls.MessagePack", "PipeMethodCalls.MessagePack\PipeMethodCalls.MessagePack.csproj", "{B46297A4-6216-4B6A-A7E6-5EB7420D5617}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestScenarioRunner", "TestScenarioRunner\TestScenarioRunner.csproj", "{30F3D22E-165F-4F2B-BE90-A588629F0086}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestScenarioRunner", "TestScenarioRunner\TestScenarioRunner.csproj", "{30F3D22E-165F-4F2B-BE90-A588629F0086}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestCore", "TestCore\TestCore.csproj", "{E0240541-888E-4A95-BAEE-7019EE8E642E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PipeMethodCalls.Tests", "PipeMethodCalls.Tests\PipeMethodCalls.Tests.csproj", "{4BEB5599-E924-4342-B6BE-E8EB19FC3EC0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PipeMethodCalls.Tests", "PipeMethodCalls.Tests\PipeMethodCalls.Tests.csproj", "{4BEB5599-E924-4342-B6BE-E8EB19FC3EC0}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{0293C327-9084-4D6C-8991-8D2E6CD5E1C2}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
