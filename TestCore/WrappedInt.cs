@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Text;
 
-namespace TestAppCore
+namespace TestCore
 {
 	[DataContract]
 	public class WrappedInt
