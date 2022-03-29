@@ -27,6 +27,20 @@ namespace TestCore
 			return new List<T> { item };
 		}
 
+		public int Unwrap(WrappedInt a)
+		{
+			if (a == null)
+            {
+				return 0;
+            }
+
+			return a.Num;
+		}
+
+		public void DoesNothing()
+        {
+        }
+
 		public void AlwaysFails()
 		{
 			throw new InvalidOperationException("This method always fails.");
@@ -36,5 +50,5 @@ namespace TestCore
 		{
 			refParam = 5;
 		}
-	}
+    }
 }

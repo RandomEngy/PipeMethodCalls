@@ -15,6 +15,10 @@ namespace TestCore
 
 		IList<T> Listify<T>(T item);
 
+		int Unwrap(WrappedInt a);
+
+		void DoesNothing();
+
 		void AlwaysFails();
 
 		void HasRefParam(ref int refParam);

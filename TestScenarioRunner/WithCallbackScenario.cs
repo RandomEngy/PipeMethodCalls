@@ -24,6 +24,11 @@ namespace TestScenarioRunner
 			listifyResult.Count.ShouldBe(1);
 			listifyResult[0].ShouldBe("item");
 
+			int unwrapResult = await pipeClientWithCallback.InvokeAsync(adder => adder.Unwrap(null)).ConfigureAwait(false);
+			unwrapResult.ShouldBe(0);
+
+			await pipeClientWithCallback.InvokeAsync(adder => adder.DoesNothing()).ConfigureAwait(false);
+
 			var expectedException = await Should.ThrowAsync<PipeInvokeFailedException>(async () =>
 			{
 				await pipeClientWithCallback.InvokeAsync(adder => adder.AlwaysFails()).ConfigureAwait(false);

@@ -12,11 +12,22 @@ namespace PipeMethodCalls.MessagePack
 	{
 		public object Deserialize(byte[] data, Type type)
 		{
+			if (data.Length == 0)
+			{
+				return null;
+			}
+
+
 			return MessagePackSerializer.Deserialize(type, data);
 		}
 
 		public byte[] Serialize(object o)
 		{
+			if (o == null)
+			{
+				return Array.Empty<byte>();
+			}
+
 			return MessagePackSerializer.Serialize(o.GetType(), o);
 		}
 	}
