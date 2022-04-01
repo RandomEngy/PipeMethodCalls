@@ -8,7 +8,7 @@
     <Description>MessagePack serializer for PipeMethodCalls. Uses the MessagePack-CSharp library.</Description>
     <PackageProjectUrl>https://github.com/RandomEngy/PipeMethodCalls.NetJson</PackageProjectUrl>
     <RepositoryUrl>https://github.com/RandomEngy/PipeMethodCalls.NetJson</RepositoryUrl>
-    <Version>3.0.0</Version>
+    <Version>3.0.1</Version>
     <PackageIcon>Icon_64x64.png</PackageIcon>
   </PropertyGroup>
 
