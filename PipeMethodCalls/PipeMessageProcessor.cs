@@ -93,7 +93,7 @@ namespace PipeMethodCalls
 
 			if (this.pipeCloseCompletionSource == null)
 			{
-				this.pipeCloseCompletionSource = new TaskCompletionSource<object>();
+				this.pipeCloseCompletionSource = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
 			}
 
 			cancellationToken.Register(() =>
