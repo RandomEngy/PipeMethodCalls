@@ -19,6 +19,8 @@ namespace TestCore
 
 		void DoesNothing();
 
+		Task DoesNothingAsync();
+
 		void AlwaysFails();
 
 		void HasRefParam(ref int refParam);
