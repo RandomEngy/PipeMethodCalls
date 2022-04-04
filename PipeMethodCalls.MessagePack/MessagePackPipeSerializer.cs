@@ -23,7 +23,7 @@ namespace PipeMethodCalls.MessagePack
 
 		public byte[] Serialize(object o)
 		{
-			if (o == null)
+			if (o == null || o.GetType().FullName == "System.Threading.Tasks.VoidTaskResult")
 			{
 				return Array.Empty<byte>();
 			}

@@ -41,6 +41,11 @@ namespace TestCore
         {
         }
 
+		public Task DoesNothingAsync()
+		{
+			return Task.CompletedTask;
+		}
+
 		public void AlwaysFails()
 		{
 			throw new InvalidOperationException("This method always fails.");

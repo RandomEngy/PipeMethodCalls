@@ -28,6 +28,7 @@ namespace TestScenarioRunner
 			unwrapResult.ShouldBe(0);
 
 			await pipeClientWithCallback.InvokeAsync(adder => adder.DoesNothing()).ConfigureAwait(false);
+			await pipeClientWithCallback.InvokeAsync(adder => adder.DoesNothingAsync()).ConfigureAwait(false);
 
 			var expectedException = await Should.ThrowAsync<PipeInvokeFailedException>(async () =>
 			{
