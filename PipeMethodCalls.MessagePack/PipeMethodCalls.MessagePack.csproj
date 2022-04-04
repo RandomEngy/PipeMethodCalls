@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -8,7 +8,7 @@
     <Description>MessagePack serializer for PipeMethodCalls. Uses the MessagePack-CSharp library.</Description>
     <PackageProjectUrl>https://github.com/RandomEngy/PipeMethodCalls.NetJson</PackageProjectUrl>
     <RepositoryUrl>https://github.com/RandomEngy/PipeMethodCalls.NetJson</RepositoryUrl>
-    <Version>3.0.1</Version>
+    <Version>3.0.2</Version>
     <PackageIcon>Icon_64x64.png</PackageIcon>
   </PropertyGroup>
 
