@@ -166,7 +166,7 @@ namespace PipeMethodCalls
         {
             this.PrepareForConnect();
             await this.rawPipeStream.ConnectAsync(cancellationToken).ConfigureAwait(false);
-            PostConnect();
+            this.PostConnect();
         }
 
 		/// <summary>
@@ -181,7 +181,7 @@ namespace PipeMethodCalls
 		{
 			this.PrepareForConnect();
 			await this.rawPipeStream.ConnectAsync(timeoutMs, cancellationToken).ConfigureAwait(false);
-			PostConnect();
+			this.PostConnect();
 		}
 
 		/// <summary>
