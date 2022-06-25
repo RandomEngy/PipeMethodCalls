@@ -150,7 +150,34 @@ namespace PipeMethodCalls
 		/// </summary>
 		/// <param name="cancellationToken">A token to cancel the request.</param>
 		/// <exception cref="IOException">Thrown when the connection fails.</exception>
+		/// <exception cref="OperationCanceledException">Thrown when the cancellation token has been invoked.</exception>
 		public async Task ConnectAsync(CancellationToken cancellationToken = default)
+        {
+            this.PrepareForConnect();
+            await this.rawPipeStream.ConnectAsync(cancellationToken).ConfigureAwait(false);
+            this.PostConnect();
+        }
+
+		/// <summary>
+		/// Connects the pipe to the server.
+		/// </summary>
+		/// <param name="timeoutMs">The request timeout in milliseconds.</param>
+		/// <param name="cancellationToken">A token to cancel the request.</param>
+		/// <exception cref="IOException">Thrown when the connection fails.</exception>
+		/// <exception cref="OperationCanceledException">Thrown when the cancellation token has been invoked.</exception>
+		/// <exception cref="TimeoutException">Thrown when the specified timeout has been reached.</exception>
+		public async Task ConnectAsync(int timeoutMs, CancellationToken cancellationToken = default)
+        {
+			this.PrepareForConnect();
+			await this.rawPipeStream.ConnectAsync(timeoutMs, cancellationToken).ConfigureAwait(false);
+			this.PostConnect();
+		}
+
+		/// <summary>
+		/// Prepares for calling ConnectAsync on the raw pipe.
+		/// </summary>
+		/// <exception cref="InvalidOperationException">Thrown when not in a valid state.</exception>
+		private void PrepareForConnect()
 		{
 			if (this.State != PipeState.NotOpened)
 			{
@@ -168,25 +195,30 @@ namespace PipeMethodCalls
 
 			if (this.rawPipeStream == null)
 			{
-				this.CreatePipe();	
+				this.CreatePipe();
 			}
-
-			await this.rawPipeStream.ConnectAsync(cancellationToken).ConfigureAwait(false);
-			this.logger.Log(() => "Connected.");
-
-			this.wrappedPipeStream = new PipeStreamWrapper(this.rawPipeStream, this.logger);
-			this.Invoker = new MethodInvoker<TRequesting>(this.wrappedPipeStream, this.messageProcessor, this.serializer, this.logger);
-
-			this.messageProcessor.StartProcessing(wrappedPipeStream);
 		}
 
 		/// <summary>
-		/// Wait for the other end to close the pipe.
+		/// Finishes setup after the raw pipe has connected.
 		/// </summary>
-		/// <param name="cancellationToken">A token to cancel the operation.</param>
-		/// <exception cref="IOException">Thrown when the pipe has closed due to an unknown error.</exception>
-		/// <remarks>This does not throw when the other end closes the pipe.</remarks>
-		public Task WaitForRemotePipeCloseAsync(CancellationToken cancellationToken = default)
+		private void PostConnect()
+        {
+            this.logger.Log(() => "Connected.");
+
+            this.wrappedPipeStream = new PipeStreamWrapper(this.rawPipeStream, this.logger);
+            this.Invoker = new MethodInvoker<TRequesting>(this.wrappedPipeStream, this.messageProcessor, this.serializer, this.logger);
+
+            this.messageProcessor.StartProcessing(wrappedPipeStream);
+        }
+
+        /// <summary>
+        /// Wait for the other end to close the pipe.
+        /// </summary>
+        /// <param name="cancellationToken">A token to cancel the operation.</param>
+        /// <exception cref="IOException">Thrown when the pipe has closed due to an unknown error.</exception>
+        /// <remarks>This does not throw when the other end closes the pipe.</remarks>
+        public Task WaitForRemotePipeCloseAsync(CancellationToken cancellationToken = default)
 		{
 			return this.messageProcessor.WaitForRemotePipeCloseAsync(cancellationToken);
 		}
