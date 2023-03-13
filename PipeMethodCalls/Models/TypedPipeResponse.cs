@@ -67,7 +67,7 @@ namespace PipeMethodCalls
 			builder.AppendLine();
 			if (this.Succeeded)
 			{
-				builder.Append("  Response: ");
+				builder.Append("  Data: ");
 				builder.Append(this.Data?.ToString() ?? "<null>");
 			}
 			else

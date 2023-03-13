@@ -37,6 +37,38 @@ namespace PipeMethodCalls
 		/// </summary>
 		public string Error { get; private set; }
 
+		public override string ToString()
+		{
+			var builder = new StringBuilder("SerializedResponse");
+			builder.AppendLine();
+			builder.Append("  CallId: ");
+			builder.Append(this.CallId);
+			builder.AppendLine();
+			builder.Append("  Succeeded: ");
+			builder.Append(this.Succeeded);
+			builder.AppendLine();
+			if (this.Succeeded)
+			{
+				builder.Append("  Data: ");
+				if (this.Data == null)
+				{
+					builder.Append("<null>");
+				}
+				else
+				{
+					builder.Append("0x");
+					builder.Append(Utilities.BytesToHexString(this.Data));
+				}
+			}
+			else
+			{
+				builder.Append("  Error: ");
+				builder.Append(this.Error);
+			}
+
+			return builder.ToString();
+		}
+
 		/// <summary>
 		/// Creates a new success pipe response.
 		/// </summary>

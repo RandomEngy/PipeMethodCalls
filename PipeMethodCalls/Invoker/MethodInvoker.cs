@@ -60,7 +60,7 @@ namespace PipeMethodCalls
 				}
 				else
 				{
-					throw new InvalidOperationException($"No pending call found for ID {response.CallId}");
+					throw new InvalidOperationException($"No pending call found for ID {response.CallId}. {response}");
 				}
 			}
 
@@ -139,7 +139,24 @@ namespace PipeMethodCalls
 				typedResponse = TypedPipeResponse.Failure(response.CallId, response.Error);
 			}
 
-			this.logger.Log(() => "Received " + typedResponse.ToString());
+			this.logger.Log(() =>
+			{
+				var builder = new StringBuilder("Received ");
+				builder.AppendLine(typedResponse.ToString());
+				builder.Append("  Response Bytes: ");
+
+				if (response.Data == null)
+				{
+					builder.Append("<null>");
+				}
+				else
+				{
+					builder.Append("0x");
+					builder.Append(Utilities.BytesToHexString(response.Data));
+				}
+
+				return builder.ToString();
+			});
 
 			if (typedResponse.Succeeded)
 			{
@@ -222,8 +239,37 @@ namespace PipeMethodCalls
 				GenericArguments = genericArguments
 			};
 
-			this.logger.Log(() => "Sending " + typedRequest.ToString());
-			return typedRequest.Serialize(this.serializer);
+			SerializedPipeRequest serializedRequest = typedRequest.Serialize(this.serializer);
+
+			this.logger.Log(() =>
+			{
+				var builder = new StringBuilder("Sending ");
+				builder.Append(typedRequest.ToString());
+				if (serializedRequest.Parameters.Length > 0)
+				{
+					builder.AppendLine();
+					builder.Append("  Serialized Parameters:");
+					foreach (byte[] parameterBytes in serializedRequest.Parameters)
+					{
+						builder.AppendLine();
+						builder.Append("    ");
+
+						if (parameterBytes == null)
+						{
+							builder.Append("<null>");
+						}
+						else
+						{
+							builder.Append("0x");
+							builder.Append(Utilities.BytesToHexString(parameterBytes));
+						}
+					}
+				}
+
+				return builder.ToString();
+			});
+
+			return serializedRequest;
 		}
 
 		/// <summary>

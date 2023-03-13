@@ -140,6 +140,8 @@ namespace PipeMethodCalls
 
 				byte[] messageBytes = messageStream.ToArray();
 
+				this.logger.Log(() => "Sending message bytes: 0x" + Utilities.BytesToHexString(messageBytes));
+
 				await this.writeLock.WaitAsync(cancellationToken).ConfigureAwait(false);
 				try
 				{
