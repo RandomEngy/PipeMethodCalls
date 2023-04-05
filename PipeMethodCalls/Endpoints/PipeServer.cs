@@ -158,15 +158,8 @@ namespace PipeMethodCalls
 			{
 				if (disposing)
 				{
-					if (this.messageProcessor != null)
-					{
-						this.messageProcessor.Dispose();
-					}
-
-					if (this.rawPipeStream != null)
-					{
-						this.rawPipeStream.Dispose();
-					}
+					this.messageProcessor?.Dispose();
+					this.rawPipeStream?.Dispose();
 				}
 
 				this.disposed = true;

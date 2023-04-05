@@ -25,7 +25,7 @@ namespace PipeMethodCalls
 		// Lock object for accessing pending calls dictionary.
 		private object pendingCallsLock = new object();
 
-		private long currentCall;
+		private int currentCall;
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="MethodInvoker" /> class.
@@ -215,7 +215,7 @@ namespace PipeMethodCalls
 		/// <returns>The request to send over the pipe to execute that expression.</returns>
 		private SerializedPipeRequest CreateRequest(Expression expression)
 		{
-			long callId = Interlocked.Increment(ref this.currentCall);
+			int callId = Interlocked.Increment(ref this.currentCall);
 
 			if (!(expression is LambdaExpression lamdaExp))
 			{

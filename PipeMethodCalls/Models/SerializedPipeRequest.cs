@@ -18,7 +18,7 @@ namespace PipeMethodCalls
 		/// <summary>
 		/// The call ID.
 		/// </summary>
-		public long CallId { get; set; }
+		public int CallId { get; set; }
 
 		/// <summary>
 		/// The name of the method to invoke.

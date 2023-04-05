@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.IO.Pipes;
 using System.Linq;
@@ -15,7 +16,6 @@ namespace PipeMethodCalls
 	/// </summary>
 	internal class PipeStreamWrapper
 	{
-		private readonly byte[] lengthReadBuffer = new byte[4];
 		private readonly PipeStream stream;
 		private readonly Action<string> logger;
 
@@ -75,34 +75,32 @@ namespace PipeMethodCalls
 			// Strings are UTF-8 null-terminated.
 			//
 			// # of Bytes - Description
-			// 4 - Payload length - number of bytes in message (excluding the payload length itself)
+			// varint - Payload length - number of bytes in message (excluding the payload length itself)
 			// 1 - MessageType
-			// 8 - CallId
+			// varint - CallId
 			// If Request
 			//   string - MethodName
-			//   4 - number of parameters
+			//   varint - number of parameters
 			//   Repeat N times
-			//     4 - parameter length in bytes
+			//     varint - parameter length in bytes
 			//     N - parameter bytes
-			//   4 - generic arguments types length
+			//   varint - generic arguments types length
 			//   Repeat N times
 			//     string - generic argument type
 			// If Response
 			//   1 - succeeded boolean
 			//   If succeeded
-			//     4 - result length in bytes
+			//     varint - result length in bytes
 			//     N - result bytes
 			//   If failed
 			//     string - error
 
 			using (var messageStream = new MemoryStream(35))
 			{
-				// We'll fill in the payload length later.
-				messageStream.Write(new byte[4], 0, 4);
 				messageStream.WriteByte((byte)messageType);
 
 				// Write the call ID
-				messageStream.WriteLong(payloadObject.CallId);
+				messageStream.WriteVarInt(payloadObject.CallId);
 
 				if (payloadObject.GetType() == typeof(SerializedPipeRequest))
 				{
@@ -111,7 +109,7 @@ namespace PipeMethodCalls
 
 					messageStream.WriteArray(request.Parameters);
 
-					messageStream.WriteInt(request.GenericArguments.Length);
+					messageStream.WriteVarInt(request.GenericArguments.Length);
 					foreach (Type genericArgument in request.GenericArguments)
 					{
 						messageStream.WriteUtf8String(genericArgument.ToString());
@@ -125,7 +123,7 @@ namespace PipeMethodCalls
 
 					if (response.Succeeded)
 					{
-						messageStream.WriteInt(response.Data.Length);
+						messageStream.WriteVarInt(response.Data.Length);
 						messageStream.Write(response.Data, 0, response.Data.Length);
 					}
 					else
@@ -134,17 +132,19 @@ namespace PipeMethodCalls
 					}
 				}
 
-				// Go back to beginning and write payload length
-				messageStream.Position = 0;
-				messageStream.WriteInt((int)(messageStream.Length - 4));
-
 				byte[] messageBytes = messageStream.ToArray();
 
-				this.logger.Log(() => "Sending message bytes: 0x" + Utilities.BytesToHexString(messageBytes));
+				byte[] messageLengthBytes = Utilities.GetVarInt(messageBytes.Length);
+
+				this.logger.Log(() => "Sending message bytes: 0x" + Utilities.BytesToHexString(messageLengthBytes) + Utilities.BytesToHexString(messageBytes));
 
 				await this.writeLock.WaitAsync(cancellationToken).ConfigureAwait(false);
 				try
 				{
+					// Write out the message length
+					await this.stream.WriteAsync(messageLengthBytes, 0, messageLengthBytes.Length, cancellationToken).ConfigureAwait(false);
+
+					// Write the message payload
 					await this.stream.WriteAsync(messageBytes, 0, messageBytes.Length, cancellationToken).ConfigureAwait(false);
 				}
 				finally
@@ -196,20 +196,14 @@ namespace PipeMethodCalls
 		/// <returns>The read message type and payload.</returns>
 		private async Task<(MessageType messageType, object messageObject)> ReadMessageAsync(CancellationToken cancellationToken)
 		{
-			// Read the 4-byte length to see how long the message is
-			int lengthBytesRead = 0;
-			while (lengthBytesRead < 4)
+			// Read the length to see how long the message is
+			int messagePayloadLength = await this.stream.ReadVarIntAsync(cancellationToken).ConfigureAwait(false);
+			if (messagePayloadLength == 0)
 			{
-				int readBytes = await this.stream.ReadAsync(this.lengthReadBuffer, lengthBytesRead, 4 - lengthBytesRead).ConfigureAwait(false);
-				if (readBytes == 0)
-				{
-					this.ClosePipe();
-				}
-
-				lengthBytesRead += readBytes;
+				this.ClosePipe();
 			}
 
-			int messagePayloadLength = IPAddress.NetworkToHostOrder(BitConverter.ToInt32(this.lengthReadBuffer, 0));
+			this.logger.Log(() => "Reading message with length " + messagePayloadLength);
 
 			byte[] messagePayloadBytes = new byte[messagePayloadLength];
 
@@ -229,7 +223,7 @@ namespace PipeMethodCalls
 			using (MemoryStream messageStream = new MemoryStream(messagePayloadBytes))
 			{
 				var messageType = (MessageType)messageStream.ReadByte();
-				long callId = messageStream.ReadLong();
+				int callId = messageStream.ReadVarInt();
 
 				object messageObject;
 				if (messageType == MessageType.Request)
@@ -237,7 +231,7 @@ namespace PipeMethodCalls
 					string methodName = messageStream.ReadUtf8String();
 					byte[][] parameters = messageStream.ReadArray();
 
-					int genericArgumentCount = messageStream.ReadInt();
+					int genericArgumentCount = messageStream.ReadVarInt();
 					Type[] genericArguments = new Type[genericArgumentCount];
 					for (int i = 0; i < genericArgumentCount; i++)
 					{
@@ -253,7 +247,7 @@ namespace PipeMethodCalls
 					bool success = BitConverter.ToBoolean(new byte[] { (byte)messageStream.ReadByte() }, 0);
 					if (success)
 					{
-						int resultPayloadLength = messageStream.ReadInt();
+						int resultPayloadLength = messageStream.ReadVarInt();
 						byte[] resultBytes = new byte[resultPayloadLength];
 						messageStream.Read(resultBytes, 0, resultPayloadLength);
 

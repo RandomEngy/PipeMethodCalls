@@ -9,6 +9,6 @@ namespace PipeMethodCalls
 		/// <summary>
 		/// The call ID.
 		/// </summary>
-		long CallId { get; }
+		int CallId { get; }
 	}
 }

@@ -12,7 +12,7 @@ namespace PipeMethodCalls
 		/// <summary>
 		/// The call ID.
 		/// </summary>
-		public long CallId { get; private set; }
+		public int CallId { get; private set; }
 
 		/// <summary>
 		/// True if the call succeeded.
@@ -35,7 +35,7 @@ namespace PipeMethodCalls
 		/// <param name="callId">The ID of the call.</param>
 		/// <param name="data">The returned data.</param>
 		/// <returns>The success pipe response.</returns>
-		public static TypedPipeResponse Success(long callId, object data)
+		public static TypedPipeResponse Success(int callId, object data)
 		{
 			return new TypedPipeResponse { Succeeded = true, CallId = callId, Data = data };
 		}
@@ -46,7 +46,7 @@ namespace PipeMethodCalls
 		/// <param name="callId">The ID of the call.</param>
 		/// <param name="message">The failure message.</param>
 		/// <returns>The failure pipe response.</returns>
-		public static TypedPipeResponse Failure(long callId, string message)
+		public static TypedPipeResponse Failure(int callId, string message)
 		{
 			return new TypedPipeResponse { Succeeded = false, CallId = callId, Error = message };
 		}

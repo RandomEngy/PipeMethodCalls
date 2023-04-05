@@ -209,7 +209,7 @@ namespace PipeMethodCalls
             this.wrappedPipeStream = new PipeStreamWrapper(this.rawPipeStream, this.logger);
             this.Invoker = new MethodInvoker<TRequesting>(this.wrappedPipeStream, this.messageProcessor, this.serializer, this.logger);
 
-            this.messageProcessor.StartProcessing(wrappedPipeStream);
+            this.messageProcessor.StartProcessing(this.wrappedPipeStream);
         }
 
         /// <summary>
@@ -253,12 +253,8 @@ namespace PipeMethodCalls
 			{
 				if (disposing)
 				{
-					this.messageProcessor.Dispose();
-
-					if (this.rawPipeStream != null)
-					{
-						this.rawPipeStream.Dispose();
-					}
+					this.messageProcessor?.Dispose();
+					this.rawPipeStream?.Dispose();
 				}
 
 				this.disposed = true;

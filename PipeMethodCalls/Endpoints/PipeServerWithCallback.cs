@@ -21,6 +21,7 @@ namespace PipeMethodCalls
 		private readonly PipeOptions? options;
 		private readonly int maxNumberOfServerInstances;
 		private NamedPipeServerStream rawPipeStream;
+		private PipeStreamWrapper wrappedPipeStream;
 		private Action<string> logger;
 		private PipeMessageProcessor messageProcessor = new PipeMessageProcessor();
 
@@ -115,11 +116,11 @@ namespace PipeMethodCalls
 
 			this.logger.Log(() => "Connected to client.");
 
-			var wrappedPipeStream = new PipeStreamWrapper(this.rawPipeStream, this.logger);
-			this.Invoker = new MethodInvoker<TRequesting>(wrappedPipeStream, this.messageProcessor, this.serializer, this.logger);
-			var requestHandler = new RequestHandler<THandling>(wrappedPipeStream, this.handlerFactoryFunc, this.serializer, this.logger);
+			this.wrappedPipeStream = new PipeStreamWrapper(this.rawPipeStream, this.logger);
+			this.Invoker = new MethodInvoker<TRequesting>(this.wrappedPipeStream, this.messageProcessor, this.serializer, this.logger);
+			var requestHandler = new RequestHandler<THandling>(this.wrappedPipeStream, this.handlerFactoryFunc, this.serializer, this.logger);
 
-			this.messageProcessor.StartProcessing(wrappedPipeStream);
+			this.messageProcessor.StartProcessing(this.wrappedPipeStream);
 		}
 
 		/// <summary>
@@ -167,12 +168,8 @@ namespace PipeMethodCalls
 			{
 				if (disposing)
 				{
-					this.messageProcessor.Dispose();
-
-					if (this.rawPipeStream != null)
-					{
-						this.rawPipeStream.Dispose();
-					}
+					this.messageProcessor?.Dispose();
+					this.rawPipeStream?.Dispose();
 				}
 
 				this.disposed = true;

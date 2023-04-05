@@ -7,7 +7,7 @@
     <Description>Lightweight library for method calls over named pipes for IPC in .NET Core. Supports two-way communication with callbacks.</Description>
     <PackageProjectUrl>https://github.com/RandomEngy/PipeMethodCalls</PackageProjectUrl>
     <RepositoryUrl>https://github.com/RandomEngy/PipeMethodCalls</RepositoryUrl>
-    <Version>3.2.1</Version>
+    <Version>4.0.0</Version>
     <PackageIcon>Icon_64x64.png</PackageIcon>
   </PropertyGroup>
 
