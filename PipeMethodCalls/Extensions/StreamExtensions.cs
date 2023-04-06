@@ -10,31 +10,6 @@ namespace PipeMethodCalls
 {
 	internal static class StreamExtensions
 	{
-		public static void WriteInt(this Stream stream, int val)
-		{
-			stream.Write(BitConverter.GetBytes(IPAddress.HostToNetworkOrder(val)), 0, 4);
-		}
-
-		public static int ReadInt(this Stream stream)
-		{
-			byte[] intBytes = new byte[4];
-			stream.Read(intBytes, 0, 4);
-			return IPAddress.NetworkToHostOrder(BitConverter.ToInt32(intBytes, 0));
-		}
-
-		public static void WriteLong(this Stream stream, long val)
-		{
-			stream.Write(BitConverter.GetBytes(IPAddress.HostToNetworkOrder(val)), 0, 8);
-		}
-
-		public static long ReadLong(this Stream stream)
-		{
-			byte[] callIdBytes = new byte[8];
-			stream.Read(callIdBytes, 0, 8);
-
-			return IPAddress.NetworkToHostOrder(BitConverter.ToInt64(callIdBytes, 0));
-		}
-
 		/// <summary>
 		/// Writes a varint to the stream.
 		/// </summary>
