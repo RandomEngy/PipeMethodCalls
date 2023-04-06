@@ -17,33 +17,33 @@ namespace TestScenarioRunner
 			WrappedInt result = await pipeClientWithCallback.InvokeAsync(adder => adder.AddWrappedNumbers(new WrappedInt { Num = 1 }, new WrappedInt { Num = 3 })).ConfigureAwait(false);
 			result.Num.ShouldBe(4);
 
-			//int asyncResult = await pipeClientWithCallback.InvokeAsync(adder => adder.AddAsync(4, 7)).ConfigureAwait(false);
-			//asyncResult.ShouldBe(11);
+			int asyncResult = await pipeClientWithCallback.InvokeAsync(adder => adder.AddAsync(4, 7)).ConfigureAwait(false);
+			asyncResult.ShouldBe(11);
 
-			//IList<string> listifyResult = await pipeClientWithCallback.InvokeAsync(adder => adder.Listify("item")).ConfigureAwait(false);
-			//listifyResult.Count.ShouldBe(1);
-			//listifyResult[0].ShouldBe("item");
+			IList<string> listifyResult = await pipeClientWithCallback.InvokeAsync(adder => adder.Listify("item")).ConfigureAwait(false);
+			listifyResult.Count.ShouldBe(1);
+			listifyResult[0].ShouldBe("item");
 
-			//int unwrapResult = await pipeClientWithCallback.InvokeAsync(adder => adder.Unwrap(null)).ConfigureAwait(false);
-			//unwrapResult.ShouldBe(0);
+			int unwrapResult = await pipeClientWithCallback.InvokeAsync(adder => adder.Unwrap(null)).ConfigureAwait(false);
+			unwrapResult.ShouldBe(0);
 
-			//await pipeClientWithCallback.InvokeAsync(adder => adder.DoesNothing()).ConfigureAwait(false);
-			//await pipeClientWithCallback.InvokeAsync(adder => adder.DoesNothingAsync()).ConfigureAwait(false);
+			await pipeClientWithCallback.InvokeAsync(adder => adder.DoesNothing()).ConfigureAwait(false);
+			await pipeClientWithCallback.InvokeAsync(adder => adder.DoesNothingAsync()).ConfigureAwait(false);
 
-			//var expectedException = await Should.ThrowAsync<PipeInvokeFailedException>(async () =>
-			//{
-			//	await pipeClientWithCallback.InvokeAsync(adder => adder.AlwaysFails()).ConfigureAwait(false);
-			//});
+			var expectedException = await Should.ThrowAsync<PipeInvokeFailedException>(async () =>
+			{
+				await pipeClientWithCallback.InvokeAsync(adder => adder.AlwaysFails()).ConfigureAwait(false);
+			});
 
-			//expectedException.Message.ShouldContain("This method always fails");
+			expectedException.Message.ShouldContain("This method always fails");
 
-			//var refException = await Should.ThrowAsync<PipeInvokeFailedException>(async () =>
-			//{
-			//	int refValue = 4;
-			//	await pipeClientWithCallback.InvokeAsync(adder => adder.HasRefParam(ref refValue)).ConfigureAwait(false);
-			//});
+			var refException = await Should.ThrowAsync<PipeInvokeFailedException>(async () =>
+			{
+				int refValue = 4;
+				await pipeClientWithCallback.InvokeAsync(adder => adder.HasRefParam(ref refValue)).ConfigureAwait(false);
+			});
 
-			//refException.Message.ShouldBe("ref parameters are not supported. Method: 'HasRefParam'");
+			refException.Message.ShouldBe("ref parameters are not supported. Method: 'HasRefParam'");
 			pipeClientWithCallback.Dispose();
 		}
 
