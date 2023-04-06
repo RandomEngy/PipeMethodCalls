@@ -54,6 +54,12 @@ namespace TestScenarioRunner
 			string concatResult = await pipeServerWithCallback.InvokeAsync(c => c.Concatenate("a", "b")).ConfigureAwait(false);
 			concatResult.ShouldBe("ab");
 
+			// 100 character string. Concat to make sure that the continuation bit works for varint.
+			string longString = "0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789";
+
+			string longConcatResult = await pipeServerWithCallback.InvokeAsync(c => c.Concatenate(longString, longString)).ConfigureAwait(false);
+			longConcatResult.ShouldBe(longString + longString);
+
 			await pipeServerWithCallback.WaitForRemotePipeCloseAsync().ConfigureAwait(false);
 		}
     }
