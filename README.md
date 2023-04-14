@@ -1,5 +1,6 @@
 # PipeMethodCalls
-Lightweight library for method calls over named and anonymous pipes for IPC in .NET Core. Supports two-way communication with callbacks.
+
+Lightweight .NET Standard 2.0 library to use method calls over named and anonymous pipes for IPC. Supports two-way communication with callbacks.
 
 ### Calls from client to server
 
