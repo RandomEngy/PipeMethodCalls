@@ -96,7 +96,18 @@ switch (scenario)
             pipeClient.SetLogger(message => Console.WriteLine(message));
             await NoCallbackScenario.RunClientAsync(pipeClient);
         }
-
+        break;
+    case Scenario.Performance:
+        if (side == PipeSide.Server)
+        {
+            var pipeServer = new PipeServer<IAdder>(pipeSerializer, PipeName, () => new Adder());
+            await PerformanceScenario.RunServerAsync(pipeServer);
+        }
+        else
+        {
+            var pipeClient = new PipeClient<IAdder>(pipeSerializer, PipeName);
+            await PerformanceScenario.RunClientAsync(pipeClient);
+        }
         break;
     default:
         PrintUsage();
