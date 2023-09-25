@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -208,12 +209,12 @@ namespace PipeMethodCalls
 			return await this.GetResponseAsync(request, cancellationToken).ConfigureAwait(false);
 		}
 
-		/// <summary>
-		/// Creates a pipe request from the given expression.
-		/// </summary>
-		/// <param name="expression">The expression to execute.</param>
-		/// <returns>The request to send over the pipe to execute that expression.</returns>
-		private SerializedPipeRequest CreateRequest(Expression expression)
+        /// <summary>
+        /// Creates a pipe request from the given expression.
+        /// </summary>
+        /// <param name="expression">The expression to execute.</param>
+        /// <returns>The request to send over the pipe to execute that expression.</returns>
+        private SerializedPipeRequest CreateRequest(Expression expression)
 		{
 			int callId = Interlocked.Increment(ref this.currentCall);
 
@@ -228,7 +229,7 @@ namespace PipeMethodCalls
 			}
 
 			string methodName = methodCallExp.Method.Name;
-			object[] argumentList = methodCallExp.Arguments.Select(argumentExpression => Expression.Lambda(argumentExpression).Compile().DynamicInvoke()).ToArray();
+			object[] argumentList = methodCallExp.Arguments.Select(ArgumentResolver.GetValue).ToArray();
 			Type[] genericArguments = methodCallExp.Method.GetGenericArguments();
 
 			var typedRequest = new TypedPipeRequest
@@ -272,7 +273,7 @@ namespace PipeMethodCalls
 			return serializedRequest;
 		}
 
-		/// <summary>
+        /// <summary>
 		/// Gets a pipe response for the given pipe request.
 		/// </summary>
 		/// <param name="request">The request to send.</param>
