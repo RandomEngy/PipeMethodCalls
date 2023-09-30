@@ -20,7 +20,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestRunner", "TestRunner\TestRunner.csproj", "{0BF80523-E47C-457E-ADB4-3BF5428CC10E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PerformanceTestRunner", "PerformanceTestRunner\PerformanceTestRunner.csproj", "{B3EA295A-09C6-484F-A582-A425BF1D8322}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -52,10 +52,10 @@ Global
 		{4BEB5599-E924-4342-B6BE-E8EB19FC3EC0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4BEB5599-E924-4342-B6BE-E8EB19FC3EC0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4BEB5599-E924-4342-B6BE-E8EB19FC3EC0}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0BF80523-E47C-457E-ADB4-3BF5428CC10E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0BF80523-E47C-457E-ADB4-3BF5428CC10E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0BF80523-E47C-457E-ADB4-3BF5428CC10E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0BF80523-E47C-457E-ADB4-3BF5428CC10E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B3EA295A-09C6-484F-A582-A425BF1D8322}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B3EA295A-09C6-484F-A582-A425BF1D8322}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B3EA295A-09C6-484F-A582-A425BF1D8322}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B3EA295A-09C6-484F-A582-A425BF1D8322}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

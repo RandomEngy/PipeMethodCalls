@@ -13,14 +13,14 @@ namespace TestCore
 			return a + b;
 		}
 
-        public double Sum(double[] numbers)
-        {
-			return numbers.Sum();
-        }
-
-        public WrappedInt AddWrappedNumbers(WrappedInt a, WrappedInt b)
+		public double Sum(double[] numbers)
 		{
-			return new WrappedInt {Num = a.Num + b.Num};
+			return numbers.Sum();
+		}
+
+		public WrappedInt AddWrappedNumbers(WrappedInt a, WrappedInt b)
+		{
+			return new WrappedInt { Num = a.Num + b.Num };
 		}
 
 		public Task<int> AddAsync(int a, int b)
@@ -36,16 +36,16 @@ namespace TestCore
 		public int Unwrap(WrappedInt a)
 		{
 			if (a == null)
-            {
+			{
 				return 0;
-            }
+			}
 
 			return a.Num;
 		}
 
 		public void DoesNothing()
-        {
-        }
+		{
+		}
 
 		public Task DoesNothingAsync()
 		{
@@ -61,5 +61,5 @@ namespace TestCore
 		{
 			refParam = 5;
 		}
-    }
+	}
 }
