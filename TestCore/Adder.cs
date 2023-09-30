@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -12,7 +13,12 @@ namespace TestCore
 			return a + b;
 		}
 
-		public WrappedInt AddWrappedNumbers(WrappedInt a, WrappedInt b)
+        public double Sum(double[] numbers)
+        {
+			return numbers.Sum();
+        }
+
+        public WrappedInt AddWrappedNumbers(WrappedInt a, WrappedInt b)
 		{
 			return new WrappedInt {Num = a.Num + b.Num};
 		}

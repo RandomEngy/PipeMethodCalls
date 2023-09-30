@@ -8,6 +8,7 @@ namespace TestCore
 	public interface IAdder
 	{
 		int AddNumbers(int a, int b);
+        double Sum(double[] numbers);
 
 		WrappedInt AddWrappedNumbers(WrappedInt a, WrappedInt b);
 

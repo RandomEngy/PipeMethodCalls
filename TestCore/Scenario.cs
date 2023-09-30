@@ -7,6 +7,7 @@ namespace TestCore
     public enum Scenario
     {
         WithCallback,
-        NoCallback
+        NoCallback,
+        Performance
     }
 }
