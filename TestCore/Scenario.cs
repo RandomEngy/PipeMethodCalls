@@ -8,6 +8,7 @@ namespace TestCore
     {
         WithCallback,
         NoCallback,
-        Performance
+        Performance,
+		ServerCrash,
     }
 }

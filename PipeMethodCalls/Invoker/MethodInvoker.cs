@@ -42,6 +42,8 @@ namespace PipeMethodCalls
 			this.serializer = serializer;
 			this.logger = logger;
 			this.pipeHost = pipeHost;
+
+			this.pipeHost.StateChanged += this.OnPipeHostStateChanged;
 		}
 
 		/// <summary>
@@ -272,6 +274,28 @@ namespace PipeMethodCalls
 			});
 
 			return serializedRequest;
+		}
+
+		/// <summary>
+		/// Handles state changes for the pipe host. Cleans up in-progress pending calls if the pipe unexpectedly closes.
+		/// </summary>
+		/// <param name="sender">The sending object.</param>
+		/// <param name="state">The new pipe state.</param>
+		private void OnPipeHostStateChanged(object sender, PipeState state)
+		{
+			if (state == PipeState.Closed)
+			{
+				lock (this.pendingCallsLock)
+				{
+					// Throw an IOException on all pending calls.
+					foreach (var pendingCall in this.pendingCalls.Values)
+					{
+						pendingCall.TaskCompletionSource.TrySetException(new IOException("Pipe closed during invocation"));
+					}
+
+					this.pendingCalls.Clear();
+				}
+			}
 		}
 
 		/// <summary>

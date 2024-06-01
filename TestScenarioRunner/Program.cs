@@ -109,6 +109,18 @@ switch (scenario)
 			await PerformanceScenario.RunClientAsync(pipeClient);
 		}
 		break;
+	case Scenario.ServerCrash:
+		if (side == PipeSide.Server)
+		{
+			var pipeServer = new PipeServer<ICrasher>(pipeSerializer, PipeName, () => new Crasher());
+			await ServerCrashScenario.RunServerAsync(pipeServer);
+		}
+		else
+		{
+			var pipeClient = new PipeClient<ICrasher>(pipeSerializer, PipeName);
+			await ServerCrashScenario.RunClientAsync(pipeClient);
+		}
+		break;
 	default:
 		PrintUsage();
 		return 1;

@@ -32,13 +32,23 @@ namespace PipeMethodCalls.Tests
             TestScenario(Scenario.NoCallback, PipeSerializerType.MessagePack);
         }
 
-        private static void TestScenario(Scenario scenario, PipeSerializerType pipeSerializerType)
-        {
-            ProcessStartInfo serverInfo = new ProcessStartInfo("TestScenarioRunner", $"--scenario {scenario} --side {PipeSide.Server} --type {pipeSerializerType}");
-            Process serverProcess = Process.Start(serverInfo);
+		[TestMethod]
+		public void ServerCrash()
+		{
+			Process serverProcess = StartRunnerProcess(Scenario.ServerCrash, PipeSerializerType.NetJson, PipeSide.Server);
+			Process clientProcess = StartRunnerProcess(Scenario.ServerCrash, PipeSerializerType.NetJson, PipeSide.Client);
 
-            ProcessStartInfo clientInfo = new ProcessStartInfo("TestScenarioRunner", $"--scenario {scenario} --side {PipeSide.Client} --type {pipeSerializerType}");
-            Process clientProcess = Process.Start(clientInfo);
+			clientProcess.WaitForExit();
+			serverProcess.WaitForExit();
+
+			clientProcess.ExitCode.ShouldBe(0);
+			serverProcess.ExitCode.ShouldBe(1);
+		}
+
+		private static void TestScenario(Scenario scenario, PipeSerializerType pipeSerializerType)
+        {
+			Process serverProcess = StartRunnerProcess(scenario, pipeSerializerType, PipeSide.Server);
+			Process clientProcess = StartRunnerProcess(scenario, pipeSerializerType, PipeSide.Client);
 
             clientProcess.WaitForExit();
             serverProcess.WaitForExit();
@@ -46,5 +56,11 @@ namespace PipeMethodCalls.Tests
             clientProcess.ExitCode.ShouldBe(0);
             serverProcess.ExitCode.ShouldBe(0);
         }
+
+		private static Process StartRunnerProcess(Scenario scenario, PipeSerializerType pipeSerializerType, PipeSide side)
+		{
+			ProcessStartInfo processInfo = new ProcessStartInfo("TestScenarioRunner", $"--scenario {scenario} --side {side} --type {pipeSerializerType}");
+			return Process.Start(processInfo);
+		}
     }
 }

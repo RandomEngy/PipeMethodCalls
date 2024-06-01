@@ -15,15 +15,29 @@ namespace PipeMethodCalls
 		private TaskCompletionSource<object> pipeCloseCompletionSource;
 		private CancellationTokenSource workLoopCancellationTokenSource;
 
+		private PipeState state = PipeState.NotOpened;
+
 		/// <summary>
 		/// Gets the state of the pipe.
 		/// </summary>
-		public PipeState State { get; private set; } = PipeState.NotOpened;
+		public PipeState State {
+			get
+			{
+				return this.state;
+			}
+			private set
+			{
+				this.state = value;
+				this.StateChanged?.Invoke(this, this.state);
+			}
+		}
 
 		/// <summary>
 		/// Gets the pipe fault exception.
 		/// </summary>
 		public Exception PipeFault { get; private set; }
+
+		public event EventHandler<PipeState> StateChanged;
 
 		/// <summary>
 		/// Starts the processing loop on the pipe.

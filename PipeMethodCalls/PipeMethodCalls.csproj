@@ -7,10 +7,10 @@
     <Description>Lightweight .NET Standard 2.0 library for method calls over named pipes for IPC. Supports two-way communication with callbacks.</Description>
     <PackageProjectUrl>https://github.com/RandomEngy/PipeMethodCalls</PackageProjectUrl>
     <RepositoryUrl>https://github.com/RandomEngy/PipeMethodCalls</RepositoryUrl>
-    <Version>4.0.1</Version>
+    <Version>4.0.2</Version>
     <PackageIcon>Icon_64x64.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <PackageReleaseNotes>Added README.md to the NuGet package.</PackageReleaseNotes>
+    <PackageReleaseNotes>Fixed an issue with hung calls when pipe server disconnects. Pending calls now throw an IOException when the pipe closes in the middle of the call.</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
